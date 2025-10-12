@@ -87,7 +87,7 @@ body::-webkit-scrollbar {
       }
 
       .hero-button {
-        @apply md:mt-16 mt-10 text-dark-brown bg-light-brown uppercase font-bold text-lg rounded-full md:p-5 p-3 md:px-16 px-10;
+        @apply md:mt-16 mt-10 text-dark-brown bg-light-brown uppercase font-bold text-xl rounded-full md:p-5 p-3 md:px-16 px-10;
       }
     }
   }
@@ -169,7 +169,7 @@ body::-webkit-scrollbar {
     }
 
     .nutrition-text-scroll {
-      @apply rotate-[-3deg] border-[.5vw] border-[#e3d3bc] text-nowrap opacity-0 md:-mt-32 -mt-24;
+      @apply rotate-[-3deg] border-[.5vw] border-[#e3d3bc] text-nowrap opacity-0 md:-mt-26 -mt-24;
     }
 
     .nutrition-box {
@@ -179,7 +179,7 @@ body::-webkit-scrollbar {
         @apply bg-[#fdebd2] rounded-full border-[.5vw] border-[#e8ddca] mx-auto max-w-7xl md:py-8 py-5 md:px-0 px-5 flex justify-between items-center;
 
         p {
-          @apply text-[#865720];
+          @apply  text-[#865720];
         }
       }
 
@@ -197,11 +197,11 @@ body::-webkit-scrollbar {
     }
 
     .first-title {
-      @apply rotate-[3deg] relative z-10;
+      @apply rotate-[2deg] relative z-10;
     }
 
     .second-title {
-      @apply rotate-[-1deg] md:-translate-y-5;
+      @apply rotate-[-1deg] md:-translate-y-5 ;
     }
 
     .third-title {

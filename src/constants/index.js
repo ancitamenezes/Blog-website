@@ -32,11 +32,11 @@ const flavorlists = [
 ];
 
 const nutrientLists = [
-  { label: "Potassium", amount: "245mg" },
-  { label: "Calcium", amount: "500mg" },
-  { label: "Vitamin A", amount: "176mcg" },
-  { label: "Vitamin D", amount: "5mcg" },
-  { label: "Iron", amount: "1mg" },
+  { label: "Technical Guides", amount: "00+ detailed guides" },
+  { label: "Project Showcases", amount: "00+ real-world projects" },
+  { label: "Career Insights", amount: "00+ expert tips" },
+  { label: "Opinion & Leadership", amount: "00+ thought-provoking posts" },
+  { label: "Fun / Engaging Content", amount: "00+ articles & quizzes" },
 ];
 
 const cards = [

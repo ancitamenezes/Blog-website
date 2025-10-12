@@ -49,19 +49,18 @@ const MessageSection = () => {
       clipPath: "polygon(0% 0,100% 0% ,100% 100%,0% 100%)",
       ease: "circ.inOut",
     });
-    const paragraphTl=gsap.timeline({
-        scrollTrigger:{
-            trigger:".message-content p",
-            start: "top center",
-           
-        },
+    const paragraphTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".message-content p",
+        start: "top center",
+      },
     });
-    paragraphTl.from(paragraphSplit.words,{
-        yPercent:300,
-        rotate:3,
-        ease:"power1.inOut",
-        duration:1,
-        stagger:0.01,
+    paragraphTl.from(paragraphSplit.words, {
+      yPercent: 300,
+      rotate: 3,
+      ease: "power1.inOut",
+      duration: 1,
+      stagger: 0.01,
     });
   });
 
@@ -70,7 +69,7 @@ const MessageSection = () => {
       <div className="container mx-auto flex-center py-28 relative">
         <div className="w-full h-full">
           <div className="msg-wrapper">
-            <h1 className="first-message">Stir up your fearless past and</h1>
+            <h1 className="first-message">Stir up your silent thoughts and</h1>
             <div
               style={{
                 clipPath: "polygon(0 0,0 0, 0 100%,0% 100%)",
@@ -78,19 +77,19 @@ const MessageSection = () => {
               className="msg-text-scroll"
             >
               <div className="bg-light-brown md:pb-3 px-5">
-                <h2 className="text-red-brown">Fuel Up</h2>
+                <h2 className="text-red-brown">Level Up</h2>
               </div>
             </div>
             <h1 className="second-message">
-              your future with every gulp of perfect protein
+              your logic with every spark of code
             </h1>
           </div>
           <div className="flex-center md:mt-20 mt-10">
             <div className="max-w-md px-10 flex-center overflow-hidden">
               <p>
-                Rev up your rebel spirit and feed the adventure of life with
-                SPYLT, where you're one chug away from epic nostalgia and
-                fearless fun.
+                Rev up your creative engine and decode the calm, with Code &
+                Calm, where every scroll sparks innovation, insight, and
+                fearless ideas.
               </p>
             </div>
           </div>

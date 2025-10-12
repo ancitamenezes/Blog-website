@@ -78,7 +78,7 @@ const NutritionSection = () => {
         <div className="relative inline-block md:translate-y-20">
           <div className="general-title relative flex flex-col justify-center items-center gap-24">
             <div className="overflow-hidden place-self-start">
-              <h1 className="nutrition-title">It still does</h1>
+              <h1 className="nutrition-title">Learn & Grow</h1>
             </div>
             <div
               style={{
@@ -87,17 +87,17 @@ const NutritionSection = () => {
               className="nutrition-text-scroll place-self-start"
             >
               <div className="bg-yellow-brown pb-5 md:pt-0 pt-3 md:px-5 px-3">
-                <h2 className="text-milk-yellow">Body Good</h2>
+                <h2 className="text-milk-yellow">Ideas Flow</h2>
               </div>
             </div>
           </div>
         </div>
 
         <div className="flex md:justify-center items-center translate-y-5">
-          <div className="md:max-w-xs max-w-md">
+          <div className="md:max-w-md max-w-lg ">
             <p className="text-lg md:text-right text-balance font-paragraph">
-              Milk contains a wide array of nutrients, including vitamins,
-              minerals, and protein, and this is lactose free
+              Our blog contains a wide array of knowledge, tutorials, insights,
+              and fun reads designed to fuel learning and creativity.
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@ const NutritionSection = () => {
                 <div>
                   <p className="md:text-lg font-paragraph">{nutrient.label}</p>
                   <p className="font-paragraph text-sm mt-2">up to</p>
-                  <p className="text-2xl md:text-4xl tracking-tighter font-bold">
+                  <p className="text-2xl md:text-2xl tracking-tighter font-bold">
                     {nutrient.amount}
                   </p>
                 </div>

@@ -16,7 +16,7 @@ const FooterSection = () => {
       <div className="2xl:h-[110dvh] relative md:pt-[20vh] pt-[10vh]">
         <div className="overflow-hidden z-10">
           <h1 className="general-title text-center text-milk py-5">
-            #CHUGRESPONSIBLY
+            #Think.Learn.Grow
           </h1>
         </div>
 
@@ -50,23 +50,23 @@ const FooterSection = () => {
         <div className="mt-40 md:px-10 px-5 flex gap-10 md:flex-row flex-col justify-between text-milk font-paragraph md:text-lg font-medium">
           <div className="flex items-center md:gap-16 gap-5">
             <div>
-              <p>SPYLT Flavors</p>
+              <p>BLOQ Space</p>
             </div>
             <div>
-              <p>Chug Club</p>
-              <p>Student Marketing</p>
-              <p>Dairy Dealers</p>
+              <p>Code Community</p>
+              <p>Build Your Path</p>
+              <p>Stay Curious</p>
             </div>
             <div>
               <p>Company</p>
               <p>Contacts</p>
-              <p>Tasty Talk</p>
+              <p>Contribute</p>
             </div>
           </div>
 
           <div className="md:max-w-lg">
             <p>
-              Get Exclusive Early Access and Stay Informed About Product
+              Get Exclusive access to new projects, and insights! 
               Updates, Events, and More!
             </p>
             <div className="flex justify-between items-center border-b border-[#D9D9D9] py-5 md:mt-10">
@@ -85,7 +85,7 @@ const FooterSection = () => {
 
         <div className="copyright-box">
           {/* The final row with copyright and legal links. */}
-          <p>Copyright © 2025 Spylt - All Rights Reserved</p>
+          <p>Copyright © 2025 Bloq - All Rights Reserved</p>
           <div className="flex items-center gap-7">
             <p>Privacy Policy</p>
             <p>Terms of Sеrvice</p>
