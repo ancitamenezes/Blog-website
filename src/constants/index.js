@@ -1,31 +1,31 @@
 const flavorlists = [
   {
-    name: "Chocolate Milk",
+    name: "Technical Guides",
     color: "brown",
     rotation: "md:rotate-[-8deg] rotate-0",
   },
   {
-    name: "Stawberry Milk",
+    name: "Project Showcase",
     color: "red",
     rotation: "md:rotate-[8deg] rotate-0",
   },
   {
-    name: "Cookies & Cream",
+    name: "Career & Insights",
     color: "blue",
     rotation: "md:rotate-[-8deg] rotate-0",
   },
   {
-    name: "Peanut Butter Chocolate",
+    name: "Opinion & Leadership",
     color: "orange",
     rotation: "md:rotate-[8deg] rotate-0",
   },
   {
-    name: "Vanilla Milkshake",
+    name: "Fun and Engaging",
     color: "white",
     rotation: "md:rotate-[-8deg] rotate-0",
   },
   {
-    name: "Max Chocolate Milk",
+    name: "",
     color: "black",
     rotation: "md:rotate-[8deg] rotate-0",
   },

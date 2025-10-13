@@ -161,7 +161,7 @@ body::-webkit-scrollbar {
     @apply min-h-dvh 2xl:h-[120dvh] overflow-hidden relative;
 
     .big-img {
-      @apply w-full absolute 2xl:h-full md:h-2/3 h-1/2 left-0 bottom-0 object-bottom 2xl:object-contain object-cover;
+      @apply w-full absolute 2xl:h-full md:h-2/3 h-1/2 left-0 bottom-10 object-bottom 2xl:object-contain object-cover;
     }
 
     .nutrition-title {
@@ -179,7 +179,7 @@ body::-webkit-scrollbar {
         @apply bg-[#fdebd2] rounded-full border-[.5vw] border-[#e8ddca] mx-auto max-w-7xl md:py-8 py-5 md:px-0 px-5 flex justify-between items-center;
 
         p {
-          @apply  text-[#865720];
+          @apply text-[#865720];
         }
       }
 
@@ -201,7 +201,7 @@ body::-webkit-scrollbar {
     }
 
     .second-title {
-      @apply rotate-[-1deg] md:-translate-y-5 ;
+      @apply rotate-[-1deg] md:-translate-y-5;
     }
 
     .third-title {
