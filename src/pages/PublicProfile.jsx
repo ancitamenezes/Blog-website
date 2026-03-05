@@ -59,31 +59,49 @@ const PublicProfile = () => {
                         author:users(id, name, username, avatar_url),
                         likes(user_id),
                         bookmarks(user_id),
-                        comments(id)
+                        comments(id),
+                        parent_post:parent_post_id(
+                            id,
+                            title,
+                            author:users(name, username, avatar_url)
+                        )
                     `)
                     .eq('user_id', userObj.id)
                     .order('created_at', { ascending: false });
 
                 if (!postError && postData) {
-                    const formattedPosts = postData.map(post => ({
-                        id: post.id,
-                        title: post.title,
-                        snippet: post.content.substring(0, 150) + (post.content.length > 150 ? '...' : ''),
-                        fullContent: post.content,
-                        coverImage: post.cover_image,
-                        createdAt: new Date(post.created_at).toLocaleDateString(),
-                        author: {
-                            id: post.author.id,
-                            name: post.author.name,
-                            username: post.author.username,
-                            avatar: post.author.avatar_url,
-                        },
-                        tags: [],
-                        likes_count: post.likes ? post.likes.length : 0,
-                        likes_data: post.likes || [],
-                        bookmarks_data: post.bookmarks || [],
-                        comments: post.comments ? post.comments.length : 0
-                    }));
+                    const formattedPosts = postData.map(post => {
+                        const plainTextSnippet = (post.content || '').replace(/<[^>]*>?/gm, '');
+                        return {
+                            id: post.id,
+                            title: post.title,
+                            snippet: plainTextSnippet.substring(0, 150) + (plainTextSnippet.length > 150 ? '...' : ''),
+                            fullContent: post.content,
+                            coverImage: post.cover_image,
+                            createdAt: new Date(post.created_at).toLocaleDateString(),
+                            author: {
+                                id: post.author.id,
+                                name: post.author.name,
+                                username: post.author.username,
+                                avatar: post.author.avatar_url,
+                            },
+                            parent_post_id: post.parent_post_id,
+                            parent_post: post.parent_post ? {
+                                id: post.parent_post.id,
+                                title: post.parent_post.title,
+                                author: {
+                                    name: post.parent_post.author.name,
+                                    username: post.parent_post.author.username,
+                                    avatar: post.parent_post.author.avatar_url,
+                                }
+                            } : null,
+                            tags: [],
+                            likes_count: post.likes ? post.likes.length : 0,
+                            likes_data: post.likes || [],
+                            bookmarks_data: post.bookmarks || [],
+                            comments: post.comments ? post.comments.length : 0
+                        };
+                    });
                     setProfilePosts(formattedPosts);
                 }
 
@@ -127,22 +145,28 @@ const PublicProfile = () => {
                 scale: 1.1
             });
 
-            gsap.from('.profile-info', {
-                y: 30,
-                opacity: 0,
-                duration: 0.8,
-                ease: 'power3.out',
-                delay: 0.1
-            });
+            gsap.fromTo('.profile-info',
+                { y: 30, opacity: 0 },
+                {
+                    y: 0,
+                    opacity: 1,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    delay: 0.1
+                }
+            );
 
-            gsap.from('.post-stagger', {
-                y: 50,
-                opacity: 0,
-                duration: 0.8,
-                stagger: 0.1,
-                ease: 'power3.out',
-                delay: 0.3
-            });
+            gsap.fromTo('.post-stagger',
+                { y: 50, opacity: 0 },
+                {
+                    y: 0,
+                    opacity: 1,
+                    duration: 0.8,
+                    stagger: 0.1,
+                    ease: 'power3.out',
+                    delay: 0.3
+                }
+            );
         }
     }, [loading, profileUser]);
 
@@ -312,7 +336,7 @@ const PublicProfile = () => {
                         {profilePosts.length > 0 ? (
                             <div className="space-y-8">
                                 {profilePosts.map((post, i) => (
-                                    <div key={post.id} className="post-stagger" style={{ opacity: 0 }}>
+                                    <div key={post.id} className="post-stagger">
                                         <PostCard post={post} />
                                     </div>
                                 ))}

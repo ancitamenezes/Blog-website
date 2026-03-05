@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAppContext } from '../../context/AppContext';
 import { X, Send, Loader2 } from 'lucide-react';
 
-const CommentsModal = ({ post, onClose }) => {
+const CommentsModal = ({ post, onClose, onCommentAdded }) => {
     const { user } = useAppContext();
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
@@ -27,7 +27,7 @@ const CommentsModal = ({ post, onClose }) => {
                     users(id, name, username, avatar_url)
                 `)
                 .eq('post_id', post.id)
-                .order('created_at', { ascending: true });
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
             setComments(data);
@@ -47,18 +47,29 @@ const CommentsModal = ({ post, onClose }) => {
         setErrorMsg('');
 
         try {
-            const { error } = await supabase
+            const { data: newCommentData, error } = await supabase
                 .from('comments')
                 .insert({
                     user_id: user.id,
                     post_id: post.id,
                     content: newComment.trim()
-                });
+                })
+                .select(`
+                    id,
+                    content,
+                    created_at,
+                    users(id, name, username, avatar_url)
+                `)
+                .single();
 
             if (error) throw error;
 
             setNewComment('');
-            fetchComments(); // Refresh list
+            setComments(prev => [newCommentData, ...prev]);
+
+            if (onCommentAdded) {
+                onCommentAdded();
+            }
         } catch (error) {
             console.error('Error posting comment:', error);
             setErrorMsg('Failed to post comment.');

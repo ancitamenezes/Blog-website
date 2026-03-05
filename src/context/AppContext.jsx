@@ -66,32 +66,50 @@ export const AppProvider = ({ children }) => {
                     author:users(id, name, username, avatar_url),
                     likes(user_id),
                     bookmarks(user_id),
-                    comments(id)
+                    comments(id),
+                    parent_post:parent_post_id(
+                        id,
+                        title,
+                        author:users(name, username, avatar_url)
+                    )
                 `)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
 
             // Format data to match our UI expectations
-            const formattedPosts = data.map(post => ({
-                id: post.id,
-                title: post.title,
-                snippet: post.content.substring(0, 150) + (post.content.length > 150 ? '...' : ''), // Basic snippet
-                fullContent: post.content,
-                coverImage: post.cover_image,
-                createdAt: new Date(post.created_at).toLocaleDateString(),
-                author: {
-                    id: post.author.id,
-                    name: post.author.name,
-                    username: post.author.username,
-                    avatar: post.author.avatar_url,
-                },
-                tags: [], // Tags not implemented in schema yet
-                likes_count: post.likes ? post.likes.length : 0,
-                likes_data: post.likes || [],
-                bookmarks_data: post.bookmarks || [],
-                comments: post.comments ? post.comments.length : 0
-            }));
+            const formattedPosts = data.map(post => {
+                const plainTextSnippet = (post.content || '').replace(/<[^>]*>?/gm, '');
+                return {
+                    id: post.id,
+                    title: post.title,
+                    snippet: plainTextSnippet.substring(0, 150) + (plainTextSnippet.length > 150 ? '...' : ''),
+                    fullContent: post.content,
+                    coverImage: post.cover_image,
+                    createdAt: new Date(post.created_at).toLocaleDateString(),
+                    author: {
+                        id: post.author.id,
+                        name: post.author.name,
+                        username: post.author.username,
+                        avatar: post.author.avatar_url,
+                    },
+                    parent_post_id: post.parent_post_id,
+                    parent_post: post.parent_post ? {
+                        id: post.parent_post.id,
+                        title: post.parent_post.title,
+                        author: {
+                            name: post.parent_post.author.name,
+                            username: post.parent_post.author.username,
+                            avatar: post.parent_post.author.avatar_url,
+                        }
+                    } : null,
+                    tags: [], // Tags not implemented in schema yet
+                    likes_count: post.likes ? post.likes.length : 0,
+                    likes_data: post.likes || [],
+                    bookmarks_data: post.bookmarks || [],
+                    comments: post.comments ? post.comments.length : 0
+                };
+            });
 
             setPosts(formattedPosts);
         } catch (error) {

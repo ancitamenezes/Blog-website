@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Antonio:wght@100..700&display=swap");
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @font-face {
   font-family: "ProximaNova, sans-serif";
@@ -58,6 +59,33 @@ body::-webkit-scrollbar {
 
   .abs-center {
     @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+  }
+
+  @keyframes shake {
+
+    0%,
+    100% {
+      transform: rotateY(-15deg) rotateX(10deg) translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: rotateY(-15deg) rotateX(10deg) translateX(-5px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: rotateY(-15deg) rotateX(10deg) translateX(5px);
+    }
+  }
+
+  .animate-shake {
+    animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
   }
 }
 

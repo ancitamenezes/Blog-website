@@ -1,12 +1,16 @@
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Trash2, GitFork } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAppContext } from '../../context/AppContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import CommentsModal from './CommentsModal';
+import parse from 'html-react-parser';
+import { Sandpack } from '@codesandbox/sandpack-react';
+import { atomDark } from '@codesandbox/sandpack-themes';
 
 const PostCard = ({ post }) => {
     const { user, following, fetchPosts, fetchFollowing } = useAppContext();
+    const navigate = useNavigate();
 
     // Check if the current user has liked or bookmarked this post based on the aggregated array
     const hasLiked = user && post.likes_data ? post.likes_data.some(like => like.user_id === user.id) : false;
@@ -17,6 +21,7 @@ const PostCard = ({ post }) => {
 
     const [isLiked, setIsLiked] = useState(hasLiked);
     const [likesCount, setLikesCount] = useState(post.likes_count || 0);
+    const [commentsCount, setCommentsCount] = useState(post.comments || 0);
     const [isBookmarked, setIsBookmarked] = useState(hasBookmarked);
     const [showMenu, setShowMenu] = useState(false);
     const [showComments, setShowComments] = useState(false);
@@ -139,6 +144,43 @@ const PostCard = ({ post }) => {
         return <div className="glass-card animate-pulse h-64 opacity-50 flex items-center justify-center text-gray-500">Deleting...</div>;
     }
 
+    const parseOptions = {
+        replace: (domNode) => {
+            if (domNode.attribs && domNode.attribs['data-type'] === 'sandpack') {
+                const template = domNode.attribs.template || 'react';
+                const code = domNode.attribs.code || '';
+
+                return (
+                    <div className="my-8 rounded-xl overflow-hidden shadow-2xl border border-white/10 group">
+                        <div className="bg-[#0f0f11] px-4 py-2 text-xs font-mono text-emerald-400 border-b border-white/10 flex items-center gap-2">
+                            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" /> Live {template}
+                        </div>
+                        <Sandpack
+                            template={template}
+                            theme={atomDark}
+                            files={{ "/App.js": code }}
+                            options={{
+                                showNavigator: false,
+                                showLineNumbers: true,
+                                editorHeight: 400,
+                                classes: {
+                                    "sp-layout": "!border-none !bg-[#1a1a1a]",
+                                    "sp-wrapper": "!border-none",
+                                }
+                            }}
+                            customSetup={{
+                                dependencies: {
+                                    "lucide-react": "latest",
+                                    "framer-motion": "latest"
+                                }
+                            }}
+                        />
+                    </div>
+                );
+            }
+        }
+    };
+
     return (
         <article className="glass-card overflow-hidden hover:-translate-y-1 transition-transform duration-300">
             {/* Cover Image */}
@@ -162,7 +204,39 @@ const PostCard = ({ post }) => {
                             ))}
                         </div>
                     )}
+
+                    {/* Forked Badge */}
+                    {post.parent_post && (
+                        <Link to={`/u/${post.parent_post.author.username}`} className="absolute top-4 left-4 z-20 px-3 py-1.5 bg-blue-600/80 hover:bg-blue-500/90 backdrop-blur-md rounded-full text-xs font-bold text-white flex items-center gap-1.5 shadow-lg border border-blue-400/30 transition-colors">
+                            <GitFork size={14} /> Forked from @{post.parent_post.author.username}
+                        </Link>
+                    )}
+                    {post.parent_post_id && !post.parent_post && (
+                        <div className="absolute top-4 left-4 z-20 px-3 py-1.5 bg-blue-600/80 backdrop-blur-md rounded-full text-xs font-bold text-white flex items-center gap-1.5 shadow-lg border border-blue-400/30">
+                            <GitFork size={14} /> Forked Piece
+                        </div>
+                    )}
                 </div>
+            )}
+
+            {/* If no cover image, still show fork badge if applicable */}
+            {!post.coverImage && (
+                <>
+                    {post.parent_post && (
+                        <div className="px-6 pt-4 pb-0">
+                            <Link to={`/u/${post.parent_post.author.username}`} className="inline-flex px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 rounded-full text-xs font-bold text-blue-400 items-center gap-1.5 border border-blue-500/20 transition-colors">
+                                <GitFork size={14} /> Forked from @{post.parent_post.author.username}
+                            </Link>
+                        </div>
+                    )}
+                    {post.parent_post_id && !post.parent_post && (
+                        <div className="px-6 pt-4 pb-0">
+                            <div className="inline-flex px-3 py-1.5 bg-blue-600/20 rounded-full text-xs font-bold text-blue-400 items-center gap-1.5 border border-blue-500/20">
+                                <GitFork size={14} /> Forked Piece
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
 
             <div className="p-6">
@@ -236,9 +310,9 @@ const PostCard = ({ post }) => {
                     <h2 className="text-2xl font-bold tracking-tight text-white group-hover:text-primary transition-colors">
                         {post.title}
                     </h2>
-                    <p className="text-gray-400 font-paragraph line-clamp-3 leading-relaxed">
-                        {post.snippet}
-                    </p>
+                    <div className="text-gray-400 font-paragraph line-clamp-3 leading-relaxed prose prose-invert prose-purple max-w-none prose-p:my-1 prose-headings:my-2 prose-headings:text-lg">
+                        {parse(post.fullContent || post.snippet, parseOptions)}
+                    </div>
                 </div>
 
                 {/* Action Bar */}
@@ -257,11 +331,22 @@ const PostCard = ({ post }) => {
                             className={`flex items-center gap-2 transition-colors ${showComments ? 'text-blue-400' : 'hover:text-blue-400'}`}
                         >
                             <MessageCircle size={20} className={showComments ? "fill-blue-400/20" : ""} />
-                            <span className="text-sm font-bold">{post.comments}</span>
+                            <span className="text-sm font-bold">{commentsCount}</span>
                         </button>
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => {
+                                if (!user) return alert("You must be logged in to fork articles.");
+                                navigate('/create', { state: { forkData: post } });
+                            }}
+                            className="flex items-center gap-2 hover:text-blue-400 transition-colors"
+                            title="Fork this piece"
+                        >
+                            <GitFork size={20} />
+                        </button>
+
                         <button
                             onClick={handleBookmark}
                             className={`transition-colors ${isBookmarked ? 'text-green-400' : 'hover:text-green-400'}`}
@@ -277,7 +362,7 @@ const PostCard = ({ post }) => {
 
             {/* Comments Section (Inline) */}
             {showComments && (
-                <CommentsModal post={post} />
+                <CommentsModal post={post} onCommentAdded={() => setCommentsCount(c => c + 1)} />
             )}
         </article>
     );

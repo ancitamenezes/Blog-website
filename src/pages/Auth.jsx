@@ -96,16 +96,46 @@ const Auth = () => {
                 {/* Animated Abstract Shapes */}
                 <div className="relative w-full h-full flex items-center justify-center perspective-[1000px]">
                     <div className="absolute size-96 rounded-full bg-gradient-to-tr from-purple-600 to-blue-500 blur-3xl opacity-20 animate-pulse" />
-                    <div className="glass-card w-96 h-[500px] border-white/10 p-8 transform rotate-y-[-15deg] rotate-x-[10deg] flex flex-col justify-between">
-                        <div className="space-y-4">
-                            <div className="w-12 h-12 rounded-xl bg-white/10" />
-                            <div className="w-2/3 h-6 rounded-md bg-white/20" />
-                            <div className="w-full h-4 rounded-md bg-white/5" />
-                            <div className="w-5/6 h-4 rounded-md bg-white/5" />
+                    <div className={`glass-card w-96 h-[500px] border-white/10 p-8 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500 hover:rotate-y-[-5deg] hover:rotate-x-[5deg] ${errorMsg ? 'animate-shake' : 'transform rotate-y-[-15deg] rotate-x-[10deg]'}`}>
+                        {/* Background glowing accent based on input or error */}
+                        <div className={`absolute inset-0 bg-gradient-to-b ${errorMsg ? 'from-red-500/20' : (email && password ? 'from-emerald-500/10' : 'from-purple-500/10')} to-transparent transition-colors duration-700`} />
+
+                        {/* Dynamic Avatar */}
+                        <div className={`w-32 h-32 rounded-full border-4 flex items-center justify-center text-5xl font-bold bg-[#1a1a1a] shadow-xl z-10 transition-all duration-500 ${username || email ? 'text-white border-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.2)]' : 'text-gray-700 border-white/10'}`}>
+                            {username ? username[0].toUpperCase() : (email ? email[0].toUpperCase() : '?')}
                         </div>
-                        <div className="flex justify-between items-center border-t border-white/5 pt-4">
-                            <div className="w-1/3 h-4 rounded-md bg-white/10" />
-                            <div className="w-12 h-8 rounded-full bg-primary" />
+
+                        <div className="mt-8 text-center w-full z-10 space-y-4">
+                            {/* Name / Username */}
+                            <h2 className={`text-2xl font-bold ${username || email ? 'text-white' : 'text-gray-600'} transition-colors delay-100`}>
+                                {username || (isLogin ? 'Welcome Back' : 'New Developer')}
+                            </h2>
+
+                            {/* Email Badge */}
+                            <div className={`px-4 py-2 rounded-lg bg-white/5 border border-white/5 text-sm inline-block max-w-full truncate font-mono ${email ? 'text-purple-300' : 'text-gray-600'} transition-all delay-200`}>
+                                {email || 'developer@bloq.space'}
+                            </div>
+
+                            {/* Password representation */}
+                            <div className="flex items-center justify-center gap-1.5 mt-6 h-6 transition-all">
+                                {password.length > 0 ? (
+                                    Array.from({ length: Math.min(password.length, 12) }).map((_, i) => (
+                                        <div key={i} className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                                    ))
+                                ) : (
+                                    <div className="text-gray-600 text-[10px] tracking-[0.2em] font-bold uppercase transition-opacity">Awaiting Credentials</div>
+                                )}
+                                {password.length > 12 && <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />}
+                            </div>
+                        </div>
+
+                        {/* Bottom Status bar */}
+                        <div className="absolute bottom-0 left-0 w-full p-5 border-t border-white/5 bg-black/40 flex justify-between items-center text-xs font-mono backdrop-blur-md">
+                            <span className={`${email && password ? 'text-emerald-400' : 'text-gray-500'}`}>STATUS: {email && password ? 'READY' : 'PENDING'}</span>
+                            <div className="flex gap-2">
+                                <div className={`w-2 h-2 rounded-full ${email ? 'bg-purple-500 shadow-[0_0_10px_#a855f7]' : 'bg-gray-700'}`} />
+                                <div className={`w-2 h-2 rounded-full ${password ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-gray-700'}`} />
+                            </div>
                         </div>
                     </div>
                 </div>

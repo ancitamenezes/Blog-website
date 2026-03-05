@@ -2,7 +2,8 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Link } from "react-router-dom";
-import { ArrowRight, PenTool, Share2, Users } from "lucide-react";
+import { ArrowRight, PenTool, Share2, Users, GitFork, Code } from "lucide-react";
+import { ContainerScroll } from "../components/ui/container-scroll-animation";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -75,35 +76,40 @@ const Landing = () => {
             </nav>
 
             {/* Hero Section */}
-            <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 pt-20 pb-32">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15)_0%,transparent_50%)]" />
+            <section className="flex flex-col items-center justify-center pt-20 pb-10 w-full relative mt-10">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15)_0%,transparent_50%)] pointer-events-none" />
 
-                <div className="relative z-10 text-center max-w-5xl mx-auto">
-                    <h1 className="hero-title text-6xl md:text-8xl lg:text-[10rem] font-bold tracking-tighter leading-[0.9] text-white flex flex-wrap justify-center gap-x-4 uppercase">
-                        <span>Code.</span>
-                        <span>Create.</span>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">Connect.</span>
-                    </h1>
+                <ContainerScroll
+                    titleComponent={
+                        <div className="relative z-10 text-center max-w-5xl mx-auto px-6">
+                            <h1 className="hero-title text-6xl md:text-8xl lg:text-[9rem] font-bold tracking-tighter leading-[0.9] text-white flex flex-wrap justify-center gap-x-4 uppercase mb-2">
+                                <span>Code.</span>
+                                <span>Create.</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">Connect.</span>
+                            </h1>
 
-                    <p className="hero-subtitle mt-8 text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto font-paragraph leading-relaxed">
-                        The premium social space for developers. Share your journey, write high-quality technical blogs, and connect with the top 1% of builders.
-                    </p>
+                            <p className="hero-subtitle mt-6 text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto font-paragraph leading-relaxed">
+                                The premium social space for developers. Share your journey, write high-quality technical blogs, and connect with the top 1% of builders.
+                            </p>
 
-                    <div className="hero-cta mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <Link to="/auth" className="btn-primary flex items-center gap-2 group text-lg">
-                            Start Writing <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                        <Link to="/feed" className="btn-secondary text-lg">
-                            Explore Feed
-                        </Link>
-                    </div>
-                </div>
-
-                {/* Scroll Indicator */}
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-500 animate-pulse">
-                    <span className="text-sm uppercase tracking-widest font-bold">Scroll</span>
-                    <div className="w-[1px] h-12 bg-gradient-to-b from-gray-500 to-transparent" />
-                </div>
+                            <div className="hero-cta mt-10 flex flex-col sm:flex-row items-center justify-center gap-6">
+                                <Link to="/auth" className="btn-primary flex items-center gap-2 group text-lg">
+                                    Start Writing <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                                <Link to="/feed" className="btn-secondary text-lg">
+                                    Explore Feed
+                                </Link>
+                            </div>
+                        </div>
+                    }
+                >
+                    <img
+                        src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop"
+                        alt="Hero preview showcasing code editor"
+                        className="mx-auto rounded-2xl object-cover h-full w-full object-left-top"
+                        draggable={false}
+                    />
+                </ContainerScroll>
             </section>
 
             {/* Features Showcase */}
@@ -207,6 +213,69 @@ const Landing = () => {
                                             <div className="h-6 w-16 rounded-full border border-white/20 flex-center text-[10px] text-gray-400">Follow</div>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Feature 4 */}
+                    <div className="feature-card flex flex-col md:flex-row-reverse items-center gap-16">
+                        <div className="flex-1 space-y-6">
+                            <div className="size-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex-center text-indigo-400">
+                                <GitFork size={32} />
+                            </div>
+                            <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-tight">Forkable Articles</h2>
+                            <p className="text-xl text-gray-400 font-paragraph">
+                                The mechanics of open-source brought to writing. Fork any bloq, build upon someone else's brilliant ideas, and keep the pedigree alive with seamless attribution threading.
+                            </p>
+                        </div>
+                        <div className="flex-1 w-full relative perspective-[1000px]">
+                            <div className="absolute inset-0 bg-gradient-to-tl from-indigo-500/20 to-transparent blur-3xl rounded-full" />
+                            <div className="glass-card p-6 flex flex-col gap-4 relative z-10 transform -rotate-y-[10deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700">
+                                <div className="inline-flex px-3 py-1.5 bg-blue-600/20 rounded-full text-xs font-bold text-blue-400 items-center gap-1.5 border border-blue-500/20 w-max mb-2">
+                                    <GitFork size={14} /> Forked from @Ancita
+                                </div>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="size-10 rounded-full bg-white/20" />
+                                    <div>
+                                        <div className="w-24 h-3 bg-white/20 rounded-full mb-2" />
+                                        <div className="w-16 h-2 bg-white/10 rounded-full" />
+                                    </div>
+                                </div>
+                                <div className="w-full h-6 bg-white/10 rounded-md" />
+                                <div className="w-3/4 h-4 bg-white/5 rounded-md" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Feature 5 */}
+                    <div className="feature-card flex flex-col md:flex-row items-center gap-16">
+                        <div className="flex-1 space-y-6">
+                            <div className="size-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex-center text-cyan-400">
+                                <Code size={32} />
+                            </div>
+                            <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-tight">Live Code Blocks</h2>
+                            <p className="text-xl text-gray-400 font-paragraph">
+                                Stop sharing static screenshots. Inject fully interactive, instantly-compiling React and Javascript dev environments directly into your posts.
+                            </p>
+                        </div>
+                        <div className="flex-1 w-full relative">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-transparent blur-3xl rounded-full" />
+                            <div className="glass-card overflow-hidden flex flex-col relative z-10 transform hover:-translate-y-2 transition-transform duration-500 border border-cyan-500/20 shadow-2xl shadow-cyan-500/10">
+                                <div className="bg-[#0f0f11] px-4 py-3 text-xs font-mono text-cyan-400 border-b border-white/10 flex items-center gap-2">
+                                    <span className="size-2 rounded-full bg-cyan-500 animate-pulse" /> Live React Preview
+                                </div>
+                                <div className="flex flex-col sm:flex-row h-56 sm:h-48">
+                                    <div className="w-full sm:w-1/2 p-4 bg-[#1a1a1a] sm:border-r border-b sm:border-b-0 border-white/5 font-mono text-xs text-white/70 space-y-2 overflow-hidden">
+                                        <div><span className="text-purple-400">import</span> React <span className="text-purple-400">from</span> 'react';</div>
+                                        <br />
+                                        <div><span className="text-purple-400">export default function</span> <span className="text-blue-400">App</span>() {'{'}</div>
+                                        <div className="pl-4"><span className="text-purple-400">return</span> <span className="text-cyan-400">&lt;h1&gt;</span>Hello World<span className="text-cyan-400">&lt;/h1&gt;</span>;</div>
+                                        <div>{'}'}</div>
+                                    </div>
+                                    <div className="w-full sm:w-1/2 bg-white flex items-center justify-center p-4">
+                                        <h1 className="text-black text-xl font-bold text-center">Hello World</h1>
+                                    </div>
                                 </div>
                             </div>
                         </div>

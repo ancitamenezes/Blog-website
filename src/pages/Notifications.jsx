@@ -46,13 +46,16 @@ const Notifications = () => {
 
     useGSAP(() => {
         if (!loading && notifications.length > 0) {
-            gsap.from('.notification-item', {
-                y: 20,
-                opacity: 0,
-                duration: 0.5,
-                stagger: 0.05,
-                ease: 'power2.out'
-            });
+            gsap.fromTo('.notification-item',
+                { y: 20, opacity: 0 },
+                {
+                    y: 0,
+                    opacity: 1,
+                    duration: 0.5,
+                    stagger: 0.05,
+                    ease: 'power2.out'
+                }
+            );
         }
     }, [loading, notifications]);
 
@@ -183,8 +186,8 @@ const Notifications = () => {
                                 key={notification.id}
                                 onClick={() => handleNotificationClick(notification)}
                                 className={`notification-item group relative flex items-start gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${notification.is_read
-                                        ? 'glass-card hover:bg-white/5 border-white/5'
-                                        : 'glass-card border-primary/30 bg-primary/10 hover:bg-primary/20 shadow-[0_0_15px_rgba(139,92,246,0.15)]'
+                                    ? 'glass-card hover:bg-white/5 border-white/5'
+                                    : 'glass-card border-primary/30 bg-primary/10 hover:bg-primary/20 shadow-[0_0_15px_rgba(139,92,246,0.15)]'
                                     }`}
                             >
                                 {/* Unread indicator dot */}
