@@ -17,6 +17,7 @@ const Profile = () => {
     const [editUsername, setEditUsername] = useState('');
     const [editBio, setEditBio] = useState('');
     const [editTechStack, setEditTechStack] = useState('');
+    const [editLocation, setEditLocation] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -41,7 +42,32 @@ const Profile = () => {
             }
         };
 
+        const attemptReverseGeocode = async () => {
+            // Only auto-geocode if we have coords but the city is still the default or null
+            if (user.last_lat && user.last_lng && (!user.location_city || user.location_city === 'Earth')) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${user.last_lat}&lon=${user.last_lng}&zoom=10`);
+                    const data = await response.json();
+
+                    if (data && data.address) {
+                        const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Earth';
+
+                        await supabase
+                            .from('users')
+                            .update({ location_city: city })
+                            .eq('id', user.id);
+
+                        // Refresh user data silently to grab the newly saved city
+                        fetchUserProfile(user.id);
+                    }
+                } catch (err) {
+                    console.error("Geocoding failed:", err);
+                }
+            }
+        };
+
         fetchFollowersCount();
+        attemptReverseGeocode();
     }, [user]);
 
     const openModal = (type) => {
@@ -51,6 +77,7 @@ const Profile = () => {
             setEditUsername(user?.username || '');
             setEditBio(user?.bio || '');
             setEditTechStack(user?.tech_stack?.join(', ') || '');
+            setEditLocation(user?.location_city || 'Earth');
         }
         setError('');
         setIsEditing(true);
@@ -70,6 +97,7 @@ const Profile = () => {
                     name: editName,
                     username: editUsername,
                     bio: editBio,
+                    location_city: editLocation,
                     tech_stack: techArray
                 })
                 .eq('id', user.id);
@@ -174,7 +202,7 @@ const Profile = () => {
 
                         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-gray-400 font-medium">
                             <div className="flex items-center gap-2">
-                                <MapPin size={16} /> Earth
+                                <MapPin size={16} /> {user.location_city || 'Earth'}
                             </div>
                             <div className="flex items-center gap-2">
                                 <LinkIcon size={16} /> <a href="#" className="text-blue-400 hover:underline">bloq.space</a>
@@ -300,6 +328,17 @@ const Profile = () => {
                                         onChange={(e) => setEditBio(e.target.value)}
                                         className="glass-input w-full min-h-[100px] resize-y"
                                         placeholder="Tell the world about yourself..."
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Location / City</label>
+                                    <input
+                                        type="text"
+                                        value={editLocation}
+                                        onChange={(e) => setEditLocation(e.target.value)}
+                                        className="glass-input w-full"
+                                        placeholder="Earth"
                                     />
                                 </div>
 

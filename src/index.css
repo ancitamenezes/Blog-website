@@ -107,3 +107,36 @@ body::-webkit-scrollbar {
     @apply bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-3 px-8 rounded-full transition-all duration-300;
   }
 }
+
+/* Radar Map Custom Overrides */
+.custom-dark-popup .leaflet-popup-content-wrapper {
+  background-color: #18181b;
+  /* color-card */
+  color: #f4f4f5;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+}
+
+.custom-dark-popup .leaflet-popup-tip {
+  background-color: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-dark-popup .leaflet-popup-content {
+  margin: 0;
+}
+
+.custom-dark-popup a.leaflet-popup-close-button {
+  color: #a1a1aa;
+  padding: 4px;
+}
+
+.custom-dark-popup a.leaflet-popup-close-button:hover {
+  color: #fff;
+}
+
+.custom-leaflet-icon {
+  background: transparent;
+  border: none;
+}

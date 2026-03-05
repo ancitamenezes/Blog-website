@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, PenTool, User, Bell, Search, LogOut } from 'lucide-react';
+import { Home, PenTool, User, Bell, Search, LogOut, MapPin } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 
 const NavBar = () => {
@@ -55,6 +55,12 @@ const NavBar = () => {
                         <Search size={24} className="shrink-0" />
                         <span className="hidden md:block overflow-hidden max-w-0 opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 transition-all duration-300 ease-out whitespace-nowrap">Explore</span>
                     </NavLink>
+
+                    <NavLink to="/map" className={linkClass}>
+                        <MapPin size={24} className="shrink-0" />
+                        <span className="hidden md:block overflow-hidden max-w-0 opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 transition-all duration-300 ease-out whitespace-nowrap">Radar</span>
+                    </NavLink>
+
                     <NavLink to="/notifications" className={linkClass}>
                         <div className="relative">
                             <Bell size={24} className="shrink-0" />

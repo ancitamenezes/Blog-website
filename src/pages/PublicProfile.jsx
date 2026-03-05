@@ -284,6 +284,9 @@ const PublicProfile = () => {
 
                         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-gray-400 font-medium">
                             <div className="flex items-center gap-2">
+                                <MapPin size={16} /> {profileUser.location_city || 'Earth'}
+                            </div>
+                            <div className="flex items-center gap-2">
                                 <Calendar size={16} /> Joined {joinDate}
                             </div>
                         </div>

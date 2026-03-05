@@ -6,6 +6,7 @@ import CreatePost from './pages/CreatePost';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import Explore from './pages/Explore';
+import DevMap from './pages/DevMap';
 
 import Notifications from './pages/Notifications';
 import NavBar from './components/layout/NavBar';
@@ -53,6 +54,12 @@ const App = () => {
                 <div className="pt-20 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Explore /></div>
               </ProtectedRoute>
             } />
+            <Route path="/map" element={
+              <ProtectedRoute>
+                <NavBar />
+                <div className="pt-20 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><DevMap /></div>
+              </ProtectedRoute>
+            } />
             <Route path="/notifications" element={
               <ProtectedRoute>
                 <NavBar />
@@ -68,13 +75,13 @@ const App = () => {
             <Route path="/profile" element={
               <ProtectedRoute>
                 <NavBar />
-                <div className="pt-20"><Profile /></div>
+                <div className="pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Profile /></div>
               </ProtectedRoute>
             } />
             <Route path="/u/:username" element={
               <ProtectedRoute>
                 <NavBar />
-                <div className="pt-20 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><PublicProfile /></div>
+                <div className="pb-20 md:pb-0 md:pl-[88px] min-h-screen"><PublicProfile /></div>
               </ProtectedRoute>
             } />
           </Routes>
