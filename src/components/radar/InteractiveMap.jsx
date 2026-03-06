@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { User, Code2, MapPin, ExternalLink, MessageSquare, UserPlus } from 'lucide-react';
+import { User, Code2, MapPin, ExternalLink, MessageSquare, UserPlus, Check } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
+import { supabase } from '../../lib/supabase';
 
 // Required for leaflet markers to work in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -51,6 +53,30 @@ const MapUpdater = ({ center }) => {
 
 const ProfilePopup = ({ dev, currentUserId }) => {
     const isCurrentUser = dev.id === currentUserId;
+    const { following, fetchFollowing } = useAppContext();
+    const isFollowing = following?.includes(dev.id);
+    const [isFollowLoading, setIsFollowLoading] = useState(false);
+
+    const handleFollowToggle = async () => {
+        if (!currentUserId) return;
+        if (dev.id.toString().startsWith('mock-')) {
+            alert("This is a simulated user and cannot be followed.");
+            return;
+        }
+        setIsFollowLoading(true);
+        try {
+            if (isFollowing) {
+                await supabase.from('follows').delete().match({ follower_id: currentUserId, following_id: dev.id });
+            } else {
+                await supabase.from('follows').insert({ follower_id: currentUserId, following_id: dev.id });
+            }
+            await fetchFollowing(currentUserId);
+        } catch (error) {
+            console.error("Error toggling follow:", error);
+        } finally {
+            setIsFollowLoading(false);
+        }
+    };
 
     return (
         <div className="p-3 min-w-[200px] text-white">
@@ -79,13 +105,17 @@ const ProfilePopup = ({ dev, currentUserId }) => {
             )}
 
             <div className="flex gap-2 w-full mt-3">
-                <Link to={`/user/${dev.name}`} className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs py-1.5 rounded transition-colors flex items-center justify-center gap-1 no-underline">
+                <Link to={`/u/${dev.username}`} className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs py-1.5 rounded transition-colors flex items-center justify-center gap-1 no-underline">
                     <User size={12} /> Profile
                 </Link>
 
                 {!isCurrentUser && (
-                    <button className="flex-1 bg-primary hover:bg-primary/80 text-white text-xs py-1.5 rounded transition-colors flex items-center justify-center gap-1">
-                        <UserPlus size={12} /> Follow
+                    <button
+                        onClick={handleFollowToggle}
+                        disabled={isFollowLoading}
+                        className={`flex-1 text-xs py-1.5 rounded transition-colors flex items-center justify-center gap-1 ${isFollowing ? 'bg-white/10 hover:bg-white/20 text-gray-300' : 'bg-primary hover:bg-primary/80 text-white'}`}
+                    >
+                        {isFollowLoading ? '...' : isFollowing ? <><Check size={12} /> Following</> : <><UserPlus size={12} /> Follow</>}
                     </button>
                 )}
             </div>

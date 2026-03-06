@@ -7,7 +7,10 @@ import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import Explore from './pages/Explore';
 import DevMap from './pages/DevMap';
-
+import Messages from './pages/Messages';
+import CollabExplore from './pages/CollabExplore';
+import CreateCollab from './pages/CreateCollab';
+import CollabDashboard from './pages/CollabDashboard';
 import Notifications from './pages/Notifications';
 import NavBar from './components/layout/NavBar';
 import { AppProvider, useAppContext } from './context/AppContext';
@@ -45,31 +48,55 @@ const App = () => {
             <Route path="/feed" element={
               <ProtectedRoute>
                 <NavBar />
-                <div className="pt-20 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Feed /></div>
+                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Feed /></div>
               </ProtectedRoute>
             } />
             <Route path="/explore" element={
               <ProtectedRoute>
                 <NavBar />
-                <div className="pt-20 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Explore /></div>
+                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Explore /></div>
               </ProtectedRoute>
             } />
             <Route path="/map" element={
               <ProtectedRoute>
                 <NavBar />
-                <div className="pt-20 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><DevMap /></div>
+                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><DevMap /></div>
               </ProtectedRoute>
             } />
             <Route path="/notifications" element={
               <ProtectedRoute>
                 <NavBar />
-                <div className="pt-20 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Notifications /></div>
+                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Notifications /></div>
+              </ProtectedRoute>
+            } />
+            <Route path="/messages" element={
+              <ProtectedRoute>
+                <NavBar />
+                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Messages /></div>
+              </ProtectedRoute>
+            } />
+            <Route path="/collab" element={
+              <ProtectedRoute>
+                <NavBar />
+                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CollabExplore /></div>
+              </ProtectedRoute>
+            } />
+            <Route path="/collab/create" element={
+              <ProtectedRoute>
+                <NavBar />
+                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CreateCollab /></div>
+              </ProtectedRoute>
+            } />
+            <Route path="/collab/:id" element={
+              <ProtectedRoute>
+                <NavBar />
+                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CollabDashboard /></div>
               </ProtectedRoute>
             } />
             <Route path="/create" element={
               <ProtectedRoute>
                 <NavBar />
-                <div className="pt-20 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CreatePost /></div>
+                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CreatePost /></div>
               </ProtectedRoute>
             } />
             <Route path="/profile" element={

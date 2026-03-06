@@ -5,7 +5,8 @@ import { supabase } from '../lib/supabase';
 import { useAppContext } from '../context/AppContext';
 import PostCard from '../components/feed/PostCard';
 import FollowsModal from '../components/profile/FollowsModal';
-import { MapPin, Link as LinkIcon, Calendar, Edit3, Settings, Loader2, X } from 'lucide-react';
+import GitHubStatsCard from '../components/profile/GitHubStatsCard';
+import { MapPin, Link as LinkIcon, Calendar, Edit3, Settings, Loader2, X, Github } from 'lucide-react';
 
 const Profile = () => {
     const { user, posts, postsLoading, following, fetchUserProfile } = useAppContext();
@@ -18,6 +19,7 @@ const Profile = () => {
     const [editBio, setEditBio] = useState('');
     const [editTechStack, setEditTechStack] = useState('');
     const [editLocation, setEditLocation] = useState('');
+    const [editGithub, setEditGithub] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -78,6 +80,7 @@ const Profile = () => {
             setEditBio(user?.bio || '');
             setEditTechStack(user?.tech_stack?.join(', ') || '');
             setEditLocation(user?.location_city || 'Earth');
+            setEditGithub(user?.github_username || '');
         }
         setError('');
         setIsEditing(true);
@@ -98,7 +101,8 @@ const Profile = () => {
                     username: editUsername,
                     bio: editBio,
                     location_city: editLocation,
-                    tech_stack: techArray
+                    tech_stack: techArray,
+                    github_username: editGithub || null
                 })
                 .eq('id', user.id);
 
@@ -207,6 +211,11 @@ const Profile = () => {
                             <div className="flex items-center gap-2">
                                 <LinkIcon size={16} /> <a href="#" className="text-blue-400 hover:underline">bloq.space</a>
                             </div>
+                            {user.github_username && (
+                                <div className="flex items-center gap-2">
+                                    <Github size={16} /> <a href={`https://github.com/${user.github_username}`} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white hover:underline">{user.github_username}</a>
+                                </div>
+                            )}
                             <div className="flex items-center gap-2">
                                 <Calendar size={16} /> Joined {joinDate}
                             </div>
@@ -235,6 +244,11 @@ const Profile = () => {
                                 <div className="text-sm font-medium text-gray-500 uppercase tracking-wider mt-1">Following</div>
                             </div>
                         </div>
+
+                        {/* GitHub Stats */}
+                        {user.github_username && (
+                            <GitHubStatsCard username={user.github_username} />
+                        )}
 
                         {/* Tech Stack */}
                         {user.tech_stack && user.tech_stack.length > 0 && (
@@ -340,6 +354,23 @@ const Profile = () => {
                                         className="glass-input w-full"
                                         placeholder="Earth"
                                     />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">GitHub Username</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                                            <Github size={16} />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={editGithub}
+                                            onChange={(e) => setEditGithub(e.target.value)}
+                                            className="glass-input w-full pl-10"
+                                            placeholder="octocat"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 mt-1">Connect your GitHub to unlock developer stats</p>
                                 </div>
 
                                 <div>

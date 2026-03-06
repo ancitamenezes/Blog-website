@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase';
 import { useAppContext } from '../context/AppContext';
 import PostCard from '../components/feed/PostCard';
 import FollowsModal from '../components/profile/FollowsModal';
-import { MapPin, Link as LinkIcon, Calendar, Loader2, ArrowLeft } from 'lucide-react';
+import GitHubStatsCard from '../components/profile/GitHubStatsCard';
+import { MapPin, Link as LinkIcon, Calendar, Loader2, ArrowLeft, Github } from 'lucide-react';
 
 const PublicProfile = () => {
     const { username } = useParams();
@@ -286,6 +287,11 @@ const PublicProfile = () => {
                             <div className="flex items-center gap-2">
                                 <MapPin size={16} /> {profileUser.location_city || 'Earth'}
                             </div>
+                            {profileUser.github_username && (
+                                <div className="flex items-center gap-2">
+                                    <Github size={16} /> <a href={`https://github.com/${profileUser.github_username}`} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white hover:underline">{profileUser.github_username}</a>
+                                </div>
+                            )}
                             <div className="flex items-center gap-2">
                                 <Calendar size={16} /> Joined {joinDate}
                             </div>
@@ -314,6 +320,11 @@ const PublicProfile = () => {
                                 <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Following</div>
                             </div>
                         </div>
+
+                        {/* GitHub Stats */}
+                        {profileUser.github_username && (
+                            <GitHubStatsCard username={profileUser.github_username} />
+                        )}
 
                         {/* Tech Stack */}
                         {profileUser.tech_stack && profileUser.tech_stack.length > 0 && (

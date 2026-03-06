@@ -2,7 +2,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Link } from "react-router-dom";
-import { ArrowRight, PenTool, Share2, Users, GitFork, Code } from "lucide-react";
+import { ArrowRight, PenTool, Share2, Users, GitFork, Code, Briefcase, Map, MapPin, Heart, MessageCircle, Bookmark } from "lucide-react";
 import { ContainerScroll } from "../components/ui/container-scroll-animation";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -156,17 +156,44 @@ const Landing = () => {
                         </div>
                         <div className="flex-1 w-full relative perspective-[1000px]">
                             <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-transparent blur-3xl rounded-full" />
-                            <div className="glass-card flex flex-col gap-4 relative z-10 transform -rotate-y-[10deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700">
-                                <div className="h-48 rounded-t-2xl bg-gradient-to-br from-indigo-500 to-purple-600 opacity-80" />
-                                <div className="p-6 space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="size-10 rounded-full bg-white/20" />
-                                        <div>
-                                            <div className="w-24 h-3 bg-white/20 rounded-full mb-2" />
-                                            <div className="w-16 h-2 bg-white/10 rounded-full" />
+                            <div className="glass-card flex flex-col relative z-10 transform -rotate-y-[10deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 overflow-hidden shadow-2xl shadow-blue-500/10 border border-blue-500/20 group cursor-pointer">
+                                {/* Cover Image */}
+                                <div className="h-48 bg-gray-900 relative overflow-hidden">
+                                    <img src="/feed-cover.png" alt="Code Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                    <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold text-white border border-white/10">10 min read</div>
+                                </div>
+
+                                <div className="p-6">
+                                    {/* Author & Tags */}
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <img src="https://i.pravatar.cc/150?u=dev1" alt="Author" className="size-10 rounded-full border border-white/10" />
+                                            <div>
+                                                <div className="text-sm font-bold text-white">Alex Developer</div>
+                                                <div className="text-xs text-gray-400">@alexdev • 2h ago</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="w-full h-6 bg-white/10 rounded-md" />
+
+                                    {/* Content */}
+                                    <h3 className="text-xl font-bold text-white mb-2 leading-tight group-hover:text-blue-400 transition-colors">Building a High-Performance Rendering Engine in WebGL</h3>
+                                    <p className="text-sm text-gray-400 mb-6 line-clamp-2">In this deep dive, we'll explore the architecture behind modern 3D rendering and how to squeeze every drop of performance out of WebGL using raw shaders.</p>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-1.5 text-gray-400 hover:text-pink-500 transition-colors">
+                                                <Heart size={18} /> <span className="text-xs font-bold">128</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-gray-400 hover:text-blue-400 transition-colors">
+                                                <MessageCircle size={18} /> <span className="text-xs font-bold">32</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-gray-400">
+                                            <Bookmark size={18} className="hover:text-white transition-colors" />
+                                            <Share2 size={18} className="hover:text-white transition-colors" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -276,6 +303,98 @@ const Landing = () => {
                                     <div className="w-full sm:w-1/2 bg-white flex items-center justify-center p-4">
                                         <h1 className="text-black text-xl font-bold text-center">Hello World</h1>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Feature 6 */}
+                    <div className="feature-card flex flex-col md:flex-row-reverse items-center gap-16">
+                        <div className="flex-1 space-y-6">
+                            <div className="size-16 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex-center text-fuchsia-400">
+                                <Briefcase size={32} />
+                            </div>
+                            <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-tight">Project Collab Rooms</h2>
+                            <p className="text-xl text-gray-400 font-paragraph">
+                                Stop building alone. Post project requirements, recruit teammates, and launch into a dedicated workspace with real-time chat and Kanban task management.
+                            </p>
+                        </div>
+                        <div className="flex-1 w-full relative perspective-[1000px]">
+                            <div className="absolute inset-0 bg-gradient-to-bl from-fuchsia-500/20 to-transparent blur-3xl rounded-full" />
+                            <div className="glass-card p-4 md:p-6 flex flex-col gap-4 relative z-10 transform rotate-y-[5deg] -rotate-x-[5deg] hover:rotate-0 transition-transform duration-700">
+                                {/* Dashboard Mockup Mini */}
+                                <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="size-3 rounded-full bg-red-500" />
+                                        <div className="size-3 rounded-full bg-yellow-500" />
+                                        <div className="size-3 rounded-full bg-green-500" />
+                                    </div>
+                                    <div className="text-[10px] md:text-xs font-bold font-mono text-fuchsia-400 bg-fuchsia-500/10 px-2 py-1 rounded">Collab Dashboard</div>
+                                </div>
+
+                                <div className="flex gap-2 md:gap-4 h-32">
+                                    {/* Kanban Columns */}
+                                    {['To Do', 'Building', 'Done'].map((col, idx) => (
+                                        <div key={idx} className="flex-1 bg-black/40 rounded-lg p-2 border border-white/5 flex flex-col gap-2">
+                                            <div className="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase">{col}</div>
+                                            {idx === 0 && <div className="h-8 bg-white/10 rounded border border-white/5" />}
+                                            {idx === 1 && (
+                                                <>
+                                                    <div className="h-8 bg-white/10 rounded border border-white/5" />
+                                                    <div className="h-8 bg-white/10 rounded border border-white/5" />
+                                                </>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="w-full h-8 bg-white/5 rounded-lg border border-white/5 flex items-center px-3 mt-2">
+                                    <div className="size-4 rounded-full bg-white/20 mr-2 shrink-0" />
+                                    <div className="h-2 w-24 md:w-32 bg-white/10 rounded-full" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Feature 7 */}
+                    <div className="feature-card flex flex-col md:flex-row items-center gap-16">
+                        <div className="flex-1 space-y-6">
+                            <div className="size-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex-center text-orange-400">
+                                <Map size={32} />
+                            </div>
+                            <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-tight">Developer Radar</h2>
+                            <p className="text-xl text-gray-400 font-paragraph">
+                                Discover talent near you. Our interactive map lets you find developers in your city, explore their tech stack, and connect to collaborate locally.
+                            </p>
+                        </div>
+                        <div className="flex-1 w-full relative perspective-[1000px]">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/20 to-transparent blur-3xl rounded-full" />
+                            <div className="glass-card overflow-hidden relative z-10 transform -rotate-y-[5deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 h-64 border border-orange-500/20 shadow-2xl shadow-orange-500/10 flex items-center justify-center">
+                                {/* Fake Map Background */}
+                                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-orange-400/20 via-[#0f0f11] to-[#0f0f11] z-0" />
+                                <div
+                                    className="absolute inset-0 z-0 opacity-40 mix-blend-screen bg-center bg-cover scale-110"
+                                    style={{ backgroundImage: 'url(/mumbai-map.png)' }}
+                                />
+                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] z-0" />
+
+                                {/* Mock Map Pins */}
+                                <div className="absolute top-1/4 left-1/4 flex flex-col items-center animate-bounce" style={{ animationDelay: '0ms' }}>
+                                    <div className="bg-white/10 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-white border border-white/10 mb-1 whitespace-nowrap">
+                                        React Developer
+                                    </div>
+                                    <MapPin size={24} className="text-orange-500 fill-orange-500/50" />
+                                </div>
+                                <div className="absolute top-1/2 right-1/4 flex flex-col items-center animate-bounce" style={{ animationDelay: '500ms' }}>
+                                    <div className="bg-white/10 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-white border border-white/10 mb-1 whitespace-nowrap">
+                                        UI/UX Designer
+                                    </div>
+                                    <MapPin size={24} className="text-fuchsia-500 fill-fuchsia-500/50" />
+                                </div>
+                                <div className="absolute bottom-1/4 left-1/2 flex flex-col items-center animate-bounce" style={{ animationDelay: '1000ms' }}>
+                                    <div className="bg-white/10 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-white border border-white/10 mb-1 whitespace-nowrap">
+                                        Backend Dev
+                                    </div>
+                                    <MapPin size={24} className="text-cyan-500 fill-cyan-500/50" />
                                 </div>
                             </div>
                         </div>
