@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Github, Twitter, MapPin, UserPlus, Check, ExternalLink } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
+import { getActivityStatus, getAvatarGlowClass } from '../../utils/activityUtils';
 
-const RadarGrid = ({ developers }) => {
+const RadarGrid = ({ developers, loading }) => {
     // Generate static positions for the demo if none provided by real data
     const [points, setPoints] = useState([]);
 
@@ -70,9 +74,11 @@ const RadarGrid = ({ developers }) => {
                         <div className={`absolute inset-0 rounded-full animate-ping opacity-50 ${getColorClass(dev.category)}`} style={{ animationDelay: `${dev.delay}s` }} />
 
                         {/* Mini Tooltip on Hover */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 bg-[#18181b] border border-white/10 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl flex items-center gap-2">
-                            <img src={dev.avatar} className="w-4 h-4 rounded-full" />
-                            {dev.name} • {dev.category}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 bg-[#18181b] border border-white/10 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <div className="flex gap-2">
+                                <img src={dev.avatar} className={`w-4 h-4 rounded-full ${getAvatarGlowClass(getActivityStatus(dev.id)).replace('ring-offset-[#0a0a0c]', '')}`} />
+                                <span className="text-white font-medium text-xs truncate max-w-[120px]">{dev.name}</span>
+                            </div>
                         </div>
                     </div>
                 </motion.div>

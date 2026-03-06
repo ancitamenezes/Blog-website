@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAppContext } from '../context/AppContext';
 import { Loader2, Users, MessageSquare, CheckSquare, Plus, Check, X as XIcon, Send, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatSmartDate } from '../utils/dateUtils';
 
 const CollabDashboard = () => {
     const { id: roomId } = useParams();
@@ -391,7 +392,7 @@ const CollabDashboard = () => {
                                                                 <option value="in-progress">Building</option>
                                                                 <option value="done">Done</option>
                                                             </select>
-                                                            <span className="text-gray-600">{new Date(task.created_at).toLocaleDateString()}</span>
+                                                            <span className="text-gray-600">{formatSmartDate(task.created_at)}</span>
                                                         </div>
                                                     </motion.div>
                                                 ))}

@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { useAppContext } from '../context/AppContext';
+import { Link } from 'react-router-dom';
 import PostCard from '../components/feed/PostCard';
-import { Flame, Clock, Users, Loader2 } from 'lucide-react';
+import { Flame, Clock, Users, Loader2, Compass, UserPlus } from 'lucide-react';
 
 const Feed = () => {
     const { posts, postsLoading, following } = useAppContext();
@@ -92,25 +93,41 @@ const Feed = () => {
                             <PostCard post={post} />
                         </div>
                     ))
-                ) : (
-                    <div className="text-center py-20 text-gray-500">
-                        <p className="text-xl font-medium text-white mb-2">
-                            {activeTab === 'following' ? "You aren't following anyone yet." : "No posts found."}
-                        </p>
-                        <p>
-                            {activeTab === 'following'
-                                ? "Switch to 'Latest' or 'Hot' to discover amazing creators!"
-                                : "Check back later for new content."}
-                        </p>
-                    </div>
-                )}
+                ) : null}
             </div>
 
-            {/* End of feed indicator */}
-            {!postsLoading && filteredPosts.length > 0 && (
+            {/* End of feed indicator / Suggestions */}
+            {!postsLoading && filteredPosts.length >= 5 && (
                 <div className="mt-16 text-center text-gray-500 font-paragraph">
                     <div className="w-12 h-1 bg-white/10 mx-auto rounded-full mb-4" />
                     You've caught up with your feed!
+                </div>
+            )}
+
+            {!postsLoading && filteredPosts.length < 5 && (
+                <div className="mt-16 p-8 rounded-3xl glass-card border border-white/5 bg-gradient-to-br from-white/5 to-transparent text-center relative overflow-hidden backdrop-blur-xl">
+                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+                        <Compass className="text-primary" size={32} />
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">
+                        {filteredPosts.length === 0 ? "Your feed is quiet" : "Want to see more content?"}
+                    </h3>
+
+                    <p className="text-gray-400 mb-8 max-w-md mx-auto leading-relaxed font-paragraph">
+                        Follow more developers to improve your feed and get inspired, or see what's trending right now.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <Link to="/explore" className="w-full sm:w-auto px-6 py-3 rounded-xl bg-primary hover:bg-primary/80 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-[0_4px_20px_rgba(139,92,246,0.3)]">
+                            <UserPlus size={18} />
+                            Follow developers
+                        </Link>
+                        <button onClick={() => setActiveTab('hot')} className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 flex items-center justify-center gap-2 transition-all hover:border-white/20">
+                            <Flame size={18} className="text-orange-500" />
+                            Explore trending posts
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

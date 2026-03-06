@@ -36,7 +36,61 @@ const Notifications = () => {
                 .limit(50);
 
             if (error) throw error;
-            setNotifications(data || []);
+
+            // Group notifications by type and post_id (if applicable)
+            const grouped = [];
+            const processedKeys = new Set();
+
+            (data || []).forEach(notif => {
+                // We'll group likes and comments by post_id
+                if (notif.post_id && (notif.type === 'like' || notif.type === 'comment')) {
+                    const groupKey = `${notif.type}-${notif.post_id}`;
+
+                    if (processedKeys.has(groupKey)) return; // Already grouped
+
+                    // Find all identical notifications
+                    const similarNotifs = data.filter(n => n.type === notif.type && n.post_id === notif.post_id);
+
+                    if (similarNotifs.length > 1) {
+                        // Extract unique actors
+                        const uniqueActorsMap = new Map();
+                        similarNotifs.forEach(n => {
+                            if (n.actor && !uniqueActorsMap.has(n.actor.id)) {
+                                uniqueActorsMap.set(n.actor.id, n.actor);
+                            }
+                        });
+                        const uniqueActors = Array.from(uniqueActorsMap.values());
+
+                        // Create grouped notification object
+                        grouped.push({
+                            ...notif, // base data (id, post, etc.) from the most recent one
+                            actorsData: uniqueActors,
+                            totalActors: uniqueActors.length,
+                            groupedIds: similarNotifs.map(n => n.id), // so we can mark all as read when clicked
+                            is_read: similarNotifs.every(n => n.is_read) // only mark group as read if ALL are read
+                        });
+                        processedKeys.add(groupKey);
+                    } else {
+                        // Just one notification of this type/post
+                        grouped.push({
+                            ...notif,
+                            actorsData: [notif.actor],
+                            totalActors: 1,
+                            groupedIds: [notif.id]
+                        });
+                    }
+                } else {
+                    // Non-groupable (e.g. follows)
+                    grouped.push({
+                        ...notif,
+                        actorsData: [notif.actor],
+                        totalActors: 1,
+                        groupedIds: [notif.id]
+                    });
+                }
+            });
+
+            setNotifications(grouped);
         } catch (error) {
             console.error("Error fetching notifications:", error);
         } finally {
@@ -59,18 +113,20 @@ const Notifications = () => {
         }
     }, [loading, notifications]);
 
-    const markAsRead = async (notificationId) => {
+    const markAsRead = async (notificationItem) => {
         try {
+            const idsToUpdate = notificationItem.groupedIds || [notificationItem.id];
+
             // Update local state first for immediate UI feedback
             setNotifications(prev =>
-                prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+                prev.map(n => n.id === notificationItem.id ? { ...n, is_read: true } : n)
             );
 
-            // Update DB
+            // Update DB for all grouped IDs
             await supabase
                 .from('notifications')
                 .update({ is_read: true })
-                .eq('id', notificationId);
+                .in('id', idsToUpdate);
 
             // Refresh badge count
             fetchUnreadNotificationsCount(user.id);
@@ -98,7 +154,7 @@ const Notifications = () => {
     const handleNotificationClick = (notification) => {
         // Mark as read when clicked
         if (!notification.is_read) {
-            markAsRead(notification.id);
+            markAsRead(notification);
         }
 
         // Navigate based on type
@@ -112,28 +168,38 @@ const Notifications = () => {
     };
 
     const getNotificationContent = (notification) => {
-        const actorName = notification.actor?.name || 'Someone';
+        const primaryActor = notification.actorsData?.[0] || notification.actor;
+        const mainActorName = primaryActor?.name || 'Someone';
+        const total = notification.totalActors || 1;
+
+        // Build the actor text string based on grouping
+        let actorText = <span className="font-bold text-white">{mainActorName}</span>;
+        if (total === 2) {
+            actorText = <><span className="font-bold text-white">{mainActorName}</span> and <span className="font-bold text-white">{notification.actorsData[1]?.name}</span></>;
+        } else if (total > 2) {
+            actorText = <><span className="font-bold text-white">{mainActorName}</span> and <span className="font-bold text-white">{total - 1} others</span></>;
+        }
 
         switch (notification.type) {
             case 'like':
                 return {
                     icon: <Heart size={20} className="text-red-500 fill-red-500/20" />,
-                    text: <><span className="font-bold text-white">{actorName}</span> liked your bloq <span className="text-gray-400 italic">"{notification.post?.title}"</span></>
+                    text: <>{actorText} liked your bloq <span className="text-gray-400 italic">"{notification.post?.title}"</span></>
                 };
             case 'comment':
                 return {
                     icon: <MessageCircle size={20} className="text-blue-500 fill-blue-500/20" />,
-                    text: <><span className="font-bold text-white">{actorName}</span> commented on your bloq <span className="text-gray-400 italic">"{notification.post?.title}"</span></>
+                    text: <>{actorText} commented on your bloq <span className="text-gray-400 italic">"{notification.post?.title}"</span></>
                 };
             case 'follow':
                 return {
                     icon: <UserPlus size={20} className="text-green-500" />,
-                    text: <><span className="font-bold text-white">{actorName}</span> started following you</>
+                    text: <><span className="font-bold text-white">{mainActorName}</span> started following you</>
                 };
             default:
                 return {
                     icon: <Bell size={20} className="text-gray-400" />,
-                    text: <span>New interaction from {actorName}</span>
+                    text: <span>New interaction from {mainActorName}</span>
                 };
         }
     };
@@ -195,16 +261,36 @@ const Notifications = () => {
                                     <div className="absolute top-4 right-4 size-2 rounded-full bg-primary" />
                                 )}
 
-                                {/* Actor Avatar */}
-                                <div className="shrink-0 relative">
-                                    <img
-                                        src={notification.actor?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'}
-                                        alt="actor"
-                                        className="size-12 rounded-full border border-white/10 dark:bg-gray-800"
-                                    />
-                                    <div className="absolute -bottom-1 -right-1 p-1 bg-[#0f0f11] rounded-full border border-white/10">
-                                        {content.icon}
-                                    </div>
+                                {/* Actor Avatar(s) - show stacked avatars if grouped */}
+                                <div className="shrink-0 relative flex">
+                                    {notification.actorsData && notification.actorsData.length > 1 ? (
+                                        <div className="relative w-14 h-12">
+                                            <img
+                                                src={notification.actorsData[1]?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'}
+                                                alt="actor 2"
+                                                className="absolute top-0 right-0 size-10 rounded-full border-2 border-[#18181b] dark:bg-gray-800 z-0"
+                                            />
+                                            <img
+                                                src={notification.actorsData[0]?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'}
+                                                alt="actor 1"
+                                                className="absolute bottom-0 left-0 size-10 rounded-full border-2 border-[#18181b] dark:bg-gray-800 z-10"
+                                            />
+                                            <div className="absolute -bottom-1 -right-1 p-1 bg-[#0f0f11] rounded-full border border-white/10 z-20">
+                                                {content.icon}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <img
+                                                src={notification.actor?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'}
+                                                alt="actor"
+                                                className="size-12 rounded-full border border-white/10 dark:bg-gray-800"
+                                            />
+                                            <div className="absolute -bottom-1 -right-1 p-1 bg-[#0f0f11] rounded-full border border-white/10">
+                                                {content.icon}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Content */}

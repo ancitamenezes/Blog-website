@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { X, Loader2, UserPlus, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
+import { playSound } from '../../utils/soundUtils';
 
 const FollowsModal = ({ isOpen, onClose, userId, type, initialCount }) => {
     // type: 'followers' | 'following'
@@ -80,6 +81,7 @@ const FollowsModal = ({ isOpen, onClose, userId, type, initialCount }) => {
                     .match({ follower_id: currentUser.id, following_id: targetUserId });
             } else {
                 // Follow
+                playSound('follow');
                 await supabase
                     .from('follows')
                     .insert({ follower_id: currentUser.id, following_id: targetUserId });
@@ -149,8 +151,8 @@ const FollowsModal = ({ isOpen, onClose, userId, type, initialCount }) => {
                                             <button
                                                 onClick={(e) => handleFollowToggle(e, u.id)}
                                                 className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-bold transition-all ${isFollowing
-                                                        ? 'bg-white/5 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 border border-white/10 text-white'
-                                                        : 'bg-primary hover:bg-primary-hover text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]'
+                                                    ? 'bg-white/5 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 border border-white/10 text-white'
+                                                    : 'bg-primary hover:bg-primary-hover text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]'
                                                     }`}
                                             >
                                                 {isFollowing ? 'Following' : 'Follow'}

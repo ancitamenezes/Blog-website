@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { MOCK_POSTS } from '../data/mockData';
+import { formatSmartDate } from '../utils/dateUtils';
+import { playSound } from '../utils/soundUtils';
 
 const AppContext = createContext();
 
@@ -12,6 +13,32 @@ export const AppProvider = ({ children }) => {
     const [postsLoading, setPostsLoading] = useState(true);
     const [following, setFollowing] = useState([]); // Array of user IDs the current user is following
     const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+
+    // Late Night Mode State
+    const [isLateNightMode, setIsLateNightMode] = useState(() => {
+        const savedMode = localStorage.getItem('lateNightModeOverride');
+        if (savedMode !== null) return JSON.parse(savedMode);
+
+        const hour = new Date().getHours();
+        return hour >= 0 && hour < 5; // Midnight to 5 AM
+    });
+
+    // Auto-check time periodically
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const savedMode = localStorage.getItem('lateNightModeOverride');
+            if (savedMode === null) {
+                const hour = new Date().getHours();
+                setIsLateNightMode(hour >= 0 && hour < 5);
+            }
+        }, 60000); // Check every minute
+        return () => clearInterval(interval);
+    }, []);
+
+    const toggleLateNightMode = (value) => {
+        setIsLateNightMode(value);
+        localStorage.setItem('lateNightModeOverride', JSON.stringify(value));
+    };
 
     useEffect(() => {
         // Fetch current session on mount
@@ -46,6 +73,33 @@ export const AppProvider = ({ children }) => {
         return () => subscription.unsubscribe();
     }, []);
 
+    // Global Notification Listener for Sounds
+    useEffect(() => {
+        if (!user) return;
+
+        const channel = supabase
+            .channel(`app_notifications_${user.id} `)
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id = eq.${user.id} ` },
+                (payload) => {
+                    // Update the badge silently
+                    setUnreadNotificationsCount(prev => prev + 1);
+
+                    // The Like component might trigger its own optimistic 'pop',
+                    // but for background notifications (or comments/follows while elsewhere), play a sound
+                    if (payload.new.type !== 'like') {
+                        playSound('notification');
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user]);
+
     // Fetch Posts whenever session changes (could also be triggered manually)
     useEffect(() => {
         if (session) {
@@ -62,17 +116,17 @@ export const AppProvider = ({ children }) => {
             const { data, error } = await supabase
                 .from('posts')
                 .select(`
-                    *,
-                    author:users(id, name, username, avatar_url),
-                    likes(user_id),
-                    bookmarks(user_id),
-                    comments(id),
-                    parent_post:parent_post_id(
-                        id,
-                        title,
-                        author:users(name, username, avatar_url)
-                    )
-                `)
+    *,
+    author: users(id, name, username, avatar_url),
+        likes(user_id),
+        bookmarks(user_id),
+        comments(id),
+        parent_post: parent_post_id(
+            id,
+            title,
+            author: users(name, username, avatar_url)
+        )
+            `)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -86,7 +140,7 @@ export const AppProvider = ({ children }) => {
                     snippet: plainTextSnippet.substring(0, 150) + (plainTextSnippet.length > 150 ? '...' : ''),
                     fullContent: post.content,
                     coverImage: post.cover_image,
-                    createdAt: new Date(post.created_at).toLocaleDateString(),
+                    createdAt: formatSmartDate(post.created_at),
                     author: {
                         id: post.author.id,
                         name: post.author.name,
@@ -176,7 +230,8 @@ export const AppProvider = ({ children }) => {
     return (
         <AppContext.Provider value={{
             user, session, loading, posts, postsLoading, following, unreadNotificationsCount,
-            fetchPosts, fetchUserProfile, fetchFollowing, fetchUnreadNotificationsCount, signOut
+            fetchPosts, fetchUserProfile, fetchFollowing, fetchUnreadNotificationsCount, signOut,
+            isLateNightMode, toggleLateNightMode
         }}>
             {!loading && children}
         </AppContext.Provider>

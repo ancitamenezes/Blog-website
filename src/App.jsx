@@ -13,6 +13,8 @@ import CreateCollab from './pages/CreateCollab';
 import CollabDashboard from './pages/CollabDashboard';
 import Notifications from './pages/Notifications';
 import NavBar from './components/layout/NavBar';
+import ReadingProgress from './components/common/ReadingProgress';
+import LateNightToast from './components/common/LateNightToast';
 import { AppProvider, useAppContext } from './context/AppContext';
 
 // Guard component for authenticated routes
@@ -36,84 +38,94 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const AppContent = () => {
+  const { isLateNightMode } = useAppContext();
+
+  return (
+    <Router>
+      <div className={`min-h-screen bg-dark text-white selection:bg-purple-500/30 transition-colors duration-1000 ${isLateNightMode ? 'late-night-mode' : ''}`}>
+        <ReadingProgress />
+        <LateNightToast />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+
+          <Route path="/feed" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Feed /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/explore" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Explore /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/map" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><DevMap /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Notifications /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/messages" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Messages /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/collab" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CollabExplore /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/collab/create" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CreateCollab /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/collab/:id" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CollabDashboard /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/create" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CreatePost /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Profile /></div>
+            </ProtectedRoute>
+          } />
+          <Route path="/u/:username" element={
+            <ProtectedRoute>
+              <NavBar />
+              <div className="pb-20 md:pb-0 md:pl-[88px] min-h-screen"><PublicProfile /></div>
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </div>
+    </Router>
+  );
+};
+
 const App = () => {
   return (
     <AppProvider>
-      <Router>
-        <div className="min-h-screen bg-[#0f0f11] text-white selection:bg-purple-500/30">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} />
-
-            <Route path="/feed" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Feed /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/explore" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Explore /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/map" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><DevMap /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/notifications" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Notifications /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/messages" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Messages /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/collab" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CollabExplore /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/collab/create" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CreateCollab /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/collab/:id" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CollabDashboard /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/create" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pt-20 md:pt-0 pb-20 md:pb-0 md:pl-[88px] min-h-screen"><CreatePost /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pb-20 md:pb-0 md:pl-[88px] min-h-screen"><Profile /></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/u/:username" element={
-              <ProtectedRoute>
-                <NavBar />
-                <div className="pb-20 md:pb-0 md:pl-[88px] min-h-screen"><PublicProfile /></div>
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </div>
-      </Router>
+      <AppContent />
     </AppProvider>
   );
 };

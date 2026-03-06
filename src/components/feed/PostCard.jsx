@@ -7,6 +7,11 @@ import CommentsModal from './CommentsModal';
 import parse from 'html-react-parser';
 import { Sandpack } from '@codesandbox/sandpack-react';
 import { atomDark } from '@codesandbox/sandpack-themes';
+import { motion, AnimatePresence } from 'framer-motion';
+import { playSound } from '../../utils/soundUtils';
+import { getActivityStatus, getAvatarGlowClass } from '../../utils/activityUtils';
+import ActivityBadge from '../profile/ActivityBadge';
+import ForkInfoModal from './ForkInfoModal';
 
 const PostCard = ({ post }) => {
     const { user, following, fetchPosts, fetchFollowing } = useAppContext();
@@ -25,6 +30,7 @@ const PostCard = ({ post }) => {
     const [isBookmarked, setIsBookmarked] = useState(hasBookmarked);
     const [showMenu, setShowMenu] = useState(false);
     const [showComments, setShowComments] = useState(false);
+    const [isForkModalOpen, setIsForkModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const menuRef = useRef(null);
 
@@ -35,6 +41,7 @@ const PostCard = ({ post }) => {
         const previousCount = likesCount;
 
         // Optimistic update
+        if (!previousLiked) playSound('pop');
         setIsLiked(!previousLiked);
         setLikesCount(previousLiked ? previousCount - 1 : previousCount + 1);
 
@@ -129,6 +136,7 @@ const PostCard = ({ post }) => {
                     .match({ follower_id: user.id, following_id: post.author.id });
             } else {
                 // Follow
+                playSound('follow');
                 await supabase
                     .from('follows')
                     .insert({ follower_id: user.id, following_id: post.author.id });
@@ -207,14 +215,20 @@ const PostCard = ({ post }) => {
 
                     {/* Forked Badge */}
                     {post.parent_post && (
-                        <Link to={`/u/${post.parent_post.author.username}`} className="absolute top-4 left-4 z-20 px-3 py-1.5 bg-blue-600/80 hover:bg-blue-500/90 backdrop-blur-md rounded-full text-xs font-bold text-white flex items-center gap-1.5 shadow-lg border border-blue-400/30 transition-colors">
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsForkModalOpen(true); }}
+                            className="absolute top-4 left-4 z-20 px-3 py-1.5 bg-blue-600/80 hover:bg-blue-500/90 backdrop-blur-md rounded-full text-xs font-bold text-white flex items-center gap-1.5 shadow-lg border border-blue-400/30 transition-colors"
+                        >
                             <GitFork size={14} /> Forked from @{post.parent_post.author.username}
-                        </Link>
+                        </button>
                     )}
                     {post.parent_post_id && !post.parent_post && (
-                        <div className="absolute top-4 left-4 z-20 px-3 py-1.5 bg-blue-600/80 backdrop-blur-md rounded-full text-xs font-bold text-white flex items-center gap-1.5 shadow-lg border border-blue-400/30">
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsForkModalOpen(true); }}
+                            className="absolute top-4 left-4 z-20 px-3 py-1.5 bg-blue-600/80 hover:hover:bg-blue-500/90 backdrop-blur-md rounded-full text-xs font-bold text-white flex items-center gap-1.5 shadow-lg border border-blue-400/30 transition-colors"
+                        >
                             <GitFork size={14} /> Forked Piece
-                        </div>
+                        </button>
                     )}
                 </div>
             )}
@@ -224,16 +238,22 @@ const PostCard = ({ post }) => {
                 <>
                     {post.parent_post && (
                         <div className="px-6 pt-4 pb-0">
-                            <Link to={`/u/${post.parent_post.author.username}`} className="inline-flex px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 rounded-full text-xs font-bold text-blue-400 items-center gap-1.5 border border-blue-500/20 transition-colors">
+                            <button
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsForkModalOpen(true); }}
+                                className="inline-flex px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 rounded-full text-xs font-bold text-blue-400 items-center gap-1.5 border border-blue-500/20 transition-colors"
+                            >
                                 <GitFork size={14} /> Forked from @{post.parent_post.author.username}
-                            </Link>
+                            </button>
                         </div>
                     )}
                     {post.parent_post_id && !post.parent_post && (
                         <div className="px-6 pt-4 pb-0">
-                            <div className="inline-flex px-3 py-1.5 bg-blue-600/20 rounded-full text-xs font-bold text-blue-400 items-center gap-1.5 border border-blue-500/20">
+                            <button
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsForkModalOpen(true); }}
+                                className="inline-flex px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 rounded-full text-xs font-bold text-blue-400 items-center gap-1.5 border border-blue-500/20 transition-colors"
+                            >
                                 <GitFork size={14} /> Forked Piece
-                            </div>
+                            </button>
                         </div>
                     )}
                 </>
@@ -246,9 +266,9 @@ const PostCard = ({ post }) => {
                         <Link to={`/u/${post.author.username}`} className="shrink-0 relative group">
                             <div className="absolute inset-0 rounded-full bg-white/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                             <img
-                                src={post.author.avatar}
-                                alt={post.author.name}
-                                className="relative size-10 rounded-full border border-white/10"
+                                src={post.author?.avatar}
+                                alt={post.author?.name}
+                                className={`w-10 h-10 rounded-full shrink-0 object-cover ${getAvatarGlowClass(getActivityStatus(post.author?.id))}`}
                             />
                         </Link>
                         <div>
@@ -256,6 +276,7 @@ const PostCard = ({ post }) => {
                                 <Link to={`/u/${post.author.username}`} className="font-bold text-white leading-none hover:text-primary transition-colors">
                                     {post.author.name}
                                 </Link>
+                                <ActivityBadge user={post.author} className="scale-[0.80] origin-left" />
                                 {user && user.id !== post.author.id && (
                                     <>
                                         <span className="text-gray-600 text-xs">•</span>
@@ -318,13 +339,41 @@ const PostCard = ({ post }) => {
                 {/* Action Bar */}
                 <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-gray-400">
                     <div className="flex items-center gap-6">
-                        <button
+                        <motion.button
                             onClick={handleLike}
+                            whileTap={{ scale: 0.85 }}
                             className={`flex items-center gap-2 transition-colors ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
                         >
-                            <Heart size={20} className={isLiked ? "fill-current" : ""} />
+                            <div className="relative flex items-center justify-center">
+                                <motion.div
+                                    animate={isLiked ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                                    transition={{ duration: 0.3, type: "spring", stiffness: 400, damping: 10 }}
+                                >
+                                    <Heart size={20} className={isLiked ? "fill-current" : ""} />
+                                </motion.div>
+                                <AnimatePresence>
+                                    {isLiked && (
+                                        <motion.div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                                            {[...Array(6)].map((_, i) => (
+                                                <motion.span
+                                                    key={i}
+                                                    className="absolute w-1 h-1 bg-red-400 rounded-full"
+                                                    initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+                                                    animate={{
+                                                        opacity: [1, 0],
+                                                        scale: [0, 1.5],
+                                                        x: Math.cos(i * 60 * (Math.PI / 180)) * 20,
+                                                        y: Math.sin(i * 60 * (Math.PI / 180)) * 20
+                                                    }}
+                                                    transition={{ duration: 0.4, ease: "easeOut" }}
+                                                />
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                             <span className="text-sm font-bold">{likesCount}</span>
-                        </button>
+                        </motion.button>
 
                         <button
                             onClick={() => setShowComments(!showComments)}
@@ -336,7 +385,8 @@ const PostCard = ({ post }) => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button
+                        <motion.button
+                            whileTap={{ scale: 0.8 }}
                             onClick={() => {
                                 if (!user) return alert("You must be logged in to fork articles.");
                                 navigate('/create', { state: { forkData: post } });
@@ -344,15 +394,26 @@ const PostCard = ({ post }) => {
                             className="flex items-center gap-2 hover:text-blue-400 transition-colors"
                             title="Fork this piece"
                         >
-                            <GitFork size={20} />
-                        </button>
+                            <motion.div
+                                whileHover={{ rotate: 180 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <GitFork size={20} />
+                            </motion.div>
+                        </motion.button>
 
-                        <button
+                        <motion.button
+                            whileTap={{ scale: 0.85 }}
                             onClick={handleBookmark}
                             className={`transition-colors ${isBookmarked ? 'text-green-400' : 'hover:text-green-400'}`}
                         >
-                            <Bookmark size={20} className={isBookmarked ? "fill-current" : ""} />
-                        </button>
+                            <motion.div
+                                animate={isBookmarked ? { scale: [1, 1.25, 1], y: [0, -4, 0] } : { scale: 1 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <Bookmark size={20} className={isBookmarked ? "fill-current" : ""} />
+                            </motion.div>
+                        </motion.button>
                         <button className="hover:text-white transition-colors">
                             <Share2 size={20} />
                         </button>
@@ -360,10 +421,15 @@ const PostCard = ({ post }) => {
                 </div>
             </div>
 
-            {/* Comments Section (Inline) */}
-            {showComments && (
-                <CommentsModal post={post} onCommentAdded={() => setCommentsCount(c => c + 1)} />
-            )}
+            {/* Modals */}
+            <AnimatePresence>
+                {showComments && (
+                    <CommentsModal post={post} onClose={() => setShowComments(false)} />
+                )}
+                {isForkModalOpen && (
+                    <ForkInfoModal post={post} onClose={() => setIsForkModalOpen(false)} />
+                )}
+            </AnimatePresence>
         </article>
     );
 };

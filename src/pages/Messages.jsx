@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAppContext } from '../context/AppContext';
 import { MessageCircle, Send, Search, Loader2 } from 'lucide-react';
+import { playSound } from '../utils/soundUtils';
+import { getActivityStatus, getAvatarGlowClass } from '../utils/activityUtils';
+import ActivityBadge from '../components/profile/ActivityBadge';
 
 const Messages = () => {
     const { user, following } = useAppContext();
@@ -14,6 +17,10 @@ const Messages = () => {
 
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
+
+    // Typing indicator state
+    const [isTyping, setIsTyping] = useState(false);
+    const typingTimeoutRef = useRef(null);
 
     const messagesEndRef = useRef(null);
 
@@ -72,7 +79,7 @@ const Messages = () => {
 
         // Subscribe to real-time inserts for the active chat
         const channel = supabase
-            .channel('public:messages')
+            .channel(`room:${user.id}:${activeContact.id}`)
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'messages' },
@@ -84,6 +91,20 @@ const Messages = () => {
                         (newMsg.sender_id === activeContact.id && newMsg.receiver_id === user.id)
                     ) {
                         setMessages((prev) => [...prev, newMsg]);
+                        // If we receive a message from them, they stopped typing
+                        if (newMsg.sender_id === activeContact.id) {
+                            setIsTyping(false);
+                            playSound('message');
+                        }
+                    }
+                }
+            )
+            .on(
+                'broadcast',
+                { event: 'typing' },
+                (payload) => {
+                    if (payload.payload.sender_id === activeContact.id) {
+                        setIsTyping(payload.payload.isTyping);
                     }
                 }
             )
@@ -91,13 +112,43 @@ const Messages = () => {
 
         return () => {
             supabase.removeChannel(channel);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            setIsTyping(false);
         };
     }, [user, activeContact]);
 
     // Auto-scroll to bottom of messages
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+    }, [messages, isTyping]);
+
+    // Handle local typing to broadcast
+    const handleTyping = (e) => {
+        setNewMessage(e.target.value);
+
+        if (!activeContact) return;
+
+        // Broadcast that we are typing
+        supabase.channel(`room:${activeContact.id}:${user.id}`).send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: { sender_id: user.id, isTyping: true },
+        });
+
+        // Clear existing timeout
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
+        // Set a new timeout to stop typing after 2 seconds of inactivity
+        typingTimeoutRef.current = setTimeout(() => {
+            supabase.channel(`room:${activeContact.id}:${user.id}`).send({
+                type: 'broadcast',
+                event: 'typing',
+                payload: { sender_id: user.id, isTyping: false },
+            });
+        }, 2000);
+    };
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
@@ -106,6 +157,14 @@ const Messages = () => {
         const msgContent = newMessage;
         setNewMessage('');
         setIsSending(true);
+
+        // Ensure typing indicator is sent as false immediately upon sending
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        supabase.channel(`room:${activeContact.id}:${user.id}`).send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: { sender_id: user.id, isTyping: false },
+        });
 
         try {
             const { error } = await supabase
@@ -162,8 +221,7 @@ const Messages = () => {
                                     className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeContact?.id === contact.id ? 'bg-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]' : 'hover:bg-white/5'}`}
                                 >
                                     <div className="relative">
-                                        <img src={contact.avatar} alt={contact.name} className="w-12 h-12 rounded-full border border-white/10" />
-                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0a0a0c]" />
+                                        <img src={contact.avatar} alt={contact.name} className={`w-12 h-12 rounded-full ${getAvatarGlowClass(getActivityStatus(contact.id))}`} />
                                     </div>
                                     <div className="text-left flex-1 min-w-0">
                                         <h3 className="font-bold text-white text-sm truncate">{contact.name}</h3>
@@ -188,9 +246,12 @@ const Messages = () => {
                             >
                                 ←
                             </button>
-                            <img src={activeContact.avatar} alt={activeContact.name} className="w-10 h-10 rounded-full border border-white/10" />
+                            <img src={activeContact.avatar} alt={activeContact.name} className={`w-10 h-10 rounded-full ${getAvatarGlowClass(getActivityStatus(activeContact.id))}`} />
                             <div>
-                                <h3 className="font-bold text-white">{activeContact.name}</h3>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-bold text-white">{activeContact.name}</h3>
+                                    <ActivityBadge user={activeContact} className="scale-90 origin-left" />
+                                </div>
                                 <p className="text-xs text-primary">@{activeContact.username}</p>
                             </div>
                         </div>
@@ -217,8 +278,8 @@ const Messages = () => {
                                             <div className="flex flex-col gap-1 max-w-[70%]">
                                                 <div
                                                     className={`px-4 py-3 rounded-2xl text-sm ${isMe
-                                                            ? 'bg-primary text-white rounded-br-sm shadow-[0_4px_15px_rgba(139,92,246,0.3)]'
-                                                            : 'bg-white/10 text-gray-200 rounded-bl-sm border border-white/5'
+                                                        ? 'bg-primary text-white rounded-br-sm shadow-[0_4px_15px_rgba(139,92,246,0.3)]'
+                                                        : 'bg-white/10 text-gray-200 rounded-bl-sm border border-white/5'
                                                         }`}
                                                 >
                                                     {msg.content}
@@ -231,6 +292,21 @@ const Messages = () => {
                                     );
                                 })
                             )}
+
+                            {/* Typing Indicator */}
+                            {isTyping && (
+                                <div className="flex justify-start opacity-70 transition-opacity">
+                                    <div className="bg-white/5 text-gray-400 border border-white/5 px-4 py-2.5 rounded-2xl rounded-bl-sm text-xs italic flex items-center gap-2 max-w-xs shadow-sm">
+                                        <div className="flex gap-1">
+                                            <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                            <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                            <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></span>
+                                        </div>
+                                        {activeContact.name} is typing...
+                                    </div>
+                                </div>
+                            )}
+
                             <div ref={messagesEndRef} />
                         </div>
 
@@ -240,7 +316,7 @@ const Messages = () => {
                                 <input
                                     type="text"
                                     value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    onChange={handleTyping}
                                     placeholder={`Message @${activeContact.username}...`}
                                     className="glass-input w-full !py-3 !pl-4 !pr-12 !rounded-full bg-white/5 focus:bg-white/10 transition-colors"
                                 />

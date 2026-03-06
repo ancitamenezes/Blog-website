@@ -6,7 +6,9 @@ import { useAppContext } from '../context/AppContext';
 import PostCard from '../components/feed/PostCard';
 import FollowsModal from '../components/profile/FollowsModal';
 import GitHubStatsCard from '../components/profile/GitHubStatsCard';
+import { getActivityStatus, getAvatarGlowClass } from '../utils/activityUtils';
 import { MapPin, Link as LinkIcon, Calendar, Edit3, Settings, Loader2, X, Github } from 'lucide-react';
+import { formatSmartDate } from '../utils/dateUtils';
 
 const Profile = () => {
     const { user, posts, postsLoading, following, fetchUserProfile } = useAppContext();
@@ -20,8 +22,14 @@ const Profile = () => {
     const [editTechStack, setEditTechStack] = useState('');
     const [editLocation, setEditLocation] = useState('');
     const [editGithub, setEditGithub] = useState('');
+    const [editGhostMode, setEditGhostMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
+
+    // Tabs state
+    const [activeTab, setActiveTab] = useState('published');
+    const [savedPosts, setSavedPosts] = useState([]);
+    const [savedPostsLoading, setSavedPostsLoading] = useState(false);
 
     // Follower Stats
     const [followersCount, setFollowersCount] = useState(0);
@@ -70,7 +78,97 @@ const Profile = () => {
 
         fetchFollowersCount();
         attemptReverseGeocode();
-    }, [user]);
+        if (user) {
+            fetchSavedPosts();
+        }
+    }, [user, posts]);
+
+    const fetchSavedPosts = async () => {
+        if (!user) return;
+        setSavedPostsLoading(true);
+        try {
+            // Fetch bookmarks for the user
+            const { data: bookmarksData, error: bookmarksError } = await supabase
+                .from('bookmarks')
+                .select('post_id')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (bookmarksError) throw bookmarksError;
+
+            if (bookmarksData && bookmarksData.length > 0) {
+                const bookmarkedPostIds = bookmarksData.map(b => b.post_id);
+
+                // Fetch the actual posts that were bookmarked
+                const { data: postsData, error: postsError } = await supabase
+                    .from('posts')
+                    .select(`
+                        *,
+                        author:users(id, name, username, avatar_url),
+                        likes(user_id),
+                        bookmarks(user_id),
+                        comments(id),
+                        parent_post:parent_post_id(
+                            id,
+                            title,
+                            author:users(name, username, avatar_url)
+                        )
+                    `)
+                    .in('id', bookmarkedPostIds)
+                    .order('created_at', { ascending: false });
+
+                if (postsError) throw postsError;
+
+                if (postsData) {
+                    const formattedSavedPosts = postsData.map(post => {
+                        const plainTextSnippet = (post.content || '').replace(/<[^>]*>?/gm, '');
+                        return {
+                            id: post.id,
+                            title: post.title,
+                            snippet: plainTextSnippet.substring(0, 150) + (plainTextSnippet.length > 150 ? '...' : ''),
+                            fullContent: post.content,
+                            coverImage: post.cover_image,
+                            createdAt: formatSmartDate(post.created_at),
+                            author: {
+                                id: post.author.id,
+                                name: post.author.name,
+                                username: post.author.username,
+                                avatar: post.author.avatar_url,
+                            },
+                            parent_post_id: post.parent_post_id,
+                            parent_post: post.parent_post ? {
+                                id: post.parent_post.id,
+                                title: post.parent_post.title,
+                                author: {
+                                    name: post.parent_post.author.name,
+                                    username: post.parent_post.author.username,
+                                    avatar: post.parent_post.author.avatar_url,
+                                }
+                            } : null,
+                            tags: [],
+                            likes_count: post.likes ? post.likes.length : 0,
+                            likes_data: post.likes || [],
+                            bookmarks_data: post.bookmarks || [],
+                            comments: post.comments ? post.comments.length : 0
+                        };
+                    });
+
+                    // Order them based on the bookmark order
+                    const sortedFormattedPosts = formattedSavedPosts.sort((a, b) => {
+                        return bookmarkedPostIds.indexOf(a.id) - bookmarkedPostIds.indexOf(b.id);
+                    });
+
+                    setSavedPosts(sortedFormattedPosts);
+                }
+            } else {
+                setSavedPosts([]);
+            }
+        } catch (error) {
+            console.error("Error fetching saved posts:", error);
+        } finally {
+            setSavedPostsLoading(false);
+        }
+    };
 
     const openModal = (type) => {
         setModalType(type);
@@ -81,6 +179,9 @@ const Profile = () => {
             setEditTechStack(user?.tech_stack?.join(', ') || '');
             setEditLocation(user?.location_city || 'Earth');
             setEditGithub(user?.github_username || '');
+        } else if (type === 'settings') {
+            const isLocalGhost = localStorage.getItem(`ghost_mode_${user?.id}`) === 'true';
+            setEditGhostMode(isLocalGhost);
         }
         setError('');
         setIsEditing(true);
@@ -113,6 +214,20 @@ const Profile = () => {
             setIsEditing(false);
         } catch (err) {
             setError(err.message || 'Failed to update profile.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSaveSettings = async () => {
+        setIsSaving(true);
+        setError('');
+        try {
+            // Because we reverted table columns, save locally
+            localStorage.setItem(`ghost_mode_${user.id}`, editGhostMode.toString());
+            setIsEditing(false);
+        } catch (err) {
+            setError('Failed to update settings locally.');
         } finally {
             setIsSaving(false);
         }
@@ -180,7 +295,7 @@ const Profile = () => {
                         <img
                             src={user.avatar}
                             alt={user.name}
-                            className="relative size-32 md:size-48 rounded-full border-4 border-[#0f0f11] object-cover"
+                            className={`relative size-32 md:size-48 rounded-full border-4 border-[#0f0f11] object-cover ${getAvatarGlowClass(getActivityStatus(user.id))}`}
                         />
                     </div>
 
@@ -267,24 +382,67 @@ const Profile = () => {
 
                     {/* Right Column: User's Posts */}
                     <div className="w-full md:w-2/3 space-y-8">
-                        <h3 className="text-xl font-bold text-white mb-6 pb-2 border-b border-white/5 inline-block">Published Bloqs <span className="text-gray-500 font-normal text-sm ml-2">{userPosts.length}</span></h3>
+                        {/* Tabs */}
+                        <div className="flex items-center gap-6 border-b border-white/5 mb-6">
+                            <button
+                                onClick={() => setActiveTab('published')}
+                                className={`pb-3 text-lg font-bold transition-all ${activeTab === 'published' ? 'text-white border-b-2 border-primary' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                                Published Bloqs <span className="ml-2 bg-white/5 px-2 py-0.5 rounded-full text-xs font-normal">{userPosts.length}</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('saved')}
+                                className={`pb-3 text-lg font-bold transition-all ${activeTab === 'saved' ? 'text-white border-b-2 border-primary' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                                Saved Bloqs <span className="ml-2 bg-white/5 px-2 py-0.5 rounded-full text-xs font-normal">{savedPosts.length}</span>
+                            </button>
+                        </div>
 
-                        {postsLoading ? (
-                            <div className="flex justify-center items-center py-10 text-primary">
-                                <Loader2 className="animate-spin" size={32} />
-                            </div>
-                        ) : userPosts.length > 0 ? (
-                            <div className="space-y-8">
-                                {userPosts.map((post, i) => (
-                                    <div key={post.id} className="post-stagger" style={{ animationDelay: `${i * 0.1}s` }}>
-                                        <PostCard post={post} />
+                        {/* Content Area */}
+                        {activeTab === 'published' ? (
+                            postsLoading ? (
+                                <div className="flex justify-center items-center py-10 text-primary">
+                                    <Loader2 className="animate-spin" size={32} />
+                                </div>
+                            ) : userPosts.length > 0 ? (
+                                <div className="space-y-8">
+                                    {userPosts.map((post, i) => (
+                                        <div key={post.id} className="post-stagger" style={{ animationDelay: `${i * 0.1}s` }}>
+                                            <PostCard post={post} />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 px-6 glass-card border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center">
+                                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary">
+                                        <Edit3 size={24} />
                                     </div>
-                                ))}
-                            </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No Published Bloqs</h3>
+                                    <p className="text-gray-400 max-w-sm mx-auto font-paragraph mb-6">Share your knowledge, ideas, or questions with the developer community.</p>
+                                </div>
+                            )
                         ) : (
-                            <div className="text-center py-10 text-gray-500 glass-card">
-                                <p className="mb-2">You haven't published any bloqs yet.</p>
-                            </div>
+                            savedPostsLoading ? (
+                                <div className="flex justify-center items-center py-10 text-primary">
+                                    <Loader2 className="animate-spin" size={32} />
+                                </div>
+                            ) : savedPosts.length > 0 ? (
+                                <div className="space-y-8">
+                                    {savedPosts.map((post, i) => (
+                                        <div key={post.id} className="post-stagger" style={{ animationDelay: `${i * 0.1}s` }}>
+                                            <PostCard post={post} />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 px-6 glass-card border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center">
+                                    <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-4 text-blue-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No Saved Bloqs</h3>
+                                    <p className="text-gray-400 max-w-sm mx-auto font-paragraph mb-6">Save tutorials, useful threads, and inspiration to read later.</p>
+                                </div>
+                            )
                         )}
                     </div>
                 </div>
@@ -404,37 +562,49 @@ const Profile = () => {
                             </form>
                         ) : (
                             <div className="space-y-6 text-gray-300">
-                                <p className="font-paragraph">Settings are coming soon. Manage account security and notifications here.</p>
+                                <p className="font-paragraph">Manage your privacy and notification preferences.</p>
 
                                 <div className="space-y-3 pt-4 border-t border-white/5">
+                                    <div
+                                        className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/10 cursor-pointer group"
+                                        onClick={() => setEditGhostMode(!editGhostMode)}
+                                    >
+                                        <div>
+                                            <p className="font-bold text-white flex items-center gap-2">Ghost Mode {editGhostMode && <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full uppercase tracking-wider">Active</span>}</p>
+                                            <p className="text-xs text-gray-400 mt-1 pr-4">Hide your "Online" status and "Last Seen" time from other developers.</p>
+                                        </div>
+                                        <div className={`w-12 h-6 rounded-full relative transition-colors ${editGhostMode ? 'bg-purple-500' : 'bg-gray-600'}`}>
+                                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${editGhostMode ? 'left-7' : 'left-1'}`} />
+                                        </div>
+                                    </div>
+
                                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 opacity-50 cursor-not-allowed">
                                         <div>
                                             <p className="font-bold text-white">Dark Mode</p>
                                             <p className="text-xs text-gray-500">Always on, it's a lifestyle.</p>
                                         </div>
-                                        <div className="w-10 h-6 bg-primary rounded-full relative">
+                                        <div className="w-12 h-6 bg-primary rounded-full relative">
                                             <div className="absolute right-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm" />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 opacity-50 cursor-not-allowed">
-                                        <div>
-                                            <p className="font-bold text-white">Email Notifications</p>
-                                            <p className="text-xs text-gray-500">Get pinged when people interact.</p>
-                                        </div>
-                                        <div className="w-10 h-6 bg-white/20 rounded-full relative">
-                                            <div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm" />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="pt-4 flex justify-end">
+                                <div className="pt-4 flex justify-end gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setIsEditing(false)}
                                         className="btn-secondary !px-6"
+                                        disabled={isSaving}
                                     >
-                                        Close
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveSettings}
+                                        className="btn-primary flex items-center gap-2 !px-6"
+                                        disabled={isSaving}
+                                    >
+                                        {isSaving ? <Loader2 className="animate-spin" size={18} /> : 'Save Settings'}
                                     </button>
                                 </div>
                             </div>

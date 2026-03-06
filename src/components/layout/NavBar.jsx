@@ -1,6 +1,7 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Home, PenTool, User, Bell, Search, LogOut, MapPin, MessageCircle, Users } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { getActivityStatus, getAvatarGlowClass } from '../../utils/activityUtils';
 
 const NavBar = () => {
     const { user, signOut, unreadNotificationsCount } = useAppContext();
@@ -29,7 +30,7 @@ const NavBar = () => {
                 <div className="text-xl font-bold tracking-tighter">BLOQ.</div>
                 <div className="flex items-center gap-4">
                     <Search size={20} className="text-gray-400" />
-                    {user && <img src={user.avatar} className="size-8 rounded-full border border-white/10" alt="avatar" />}
+                    {user && <img src={user.avatar} className={`size-8 rounded-full ${getAvatarGlowClass(getActivityStatus(user.id))}`} alt="avatar" />}
                 </div>
             </nav>
 
@@ -101,7 +102,7 @@ const NavBar = () => {
                     <div className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-white/5 transition-colors cursor-default overflow-hidden">
                         {user ? (
                             <>
-                                <img src={user.avatar} className="size-10 rounded-full border border-white/10 shrink-0" alt={user.name} />
+                                <img src={user.avatar} className={`size-10 rounded-full shrink-0 ${getAvatarGlowClass(getActivityStatus(user.id))}`} alt={user.name} />
                                 <div className="flex-1 overflow-hidden opacity-0 max-w-0 group-hover:opacity-100 group-hover:max-w-[120px] transition-all duration-300">
                                     <p className="font-bold text-white text-sm truncate">{user.name}</p>
                                     <p className="text-gray-500 text-xs truncate">@{user.username}</p>

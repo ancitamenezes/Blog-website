@@ -9,6 +9,7 @@ import RadarGrid from '../components/radar/RadarGrid';
 import ActivityFeed from '../components/radar/ActivityFeed';
 import EventCards from '../components/radar/EventCards';
 import CollaborationCards from '../components/radar/CollaborationCards';
+import ActivityBadge from '../components/profile/ActivityBadge';
 
 const DevMap = () => {
     const [viewMode, setViewMode] = useState('map'); // 'map' or 'radar'
@@ -45,23 +46,46 @@ const DevMap = () => {
                     lng = 72.8777;
                 }
 
-                setLocation({ city: 'Live Tracking...', lat, lng });
+                setLocation({ city: 'Resolving location...', lat, lng });
+
+                // Reverse geocode to get actual city name
+                try {
+                    const geoRes = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`
+                    );
+                    const geoData = await geoRes.json();
+                    const city = geoData.address?.city || geoData.address?.town || geoData.address?.suburb || geoData.address?.county || 'Unknown Area';
+                    const state = geoData.address?.state || '';
+                    setLocation({ city: state ? `${city}, ${state}` : city, lat, lng });
+                } catch (geoErr) {
+                    console.warn('Reverse geocoding failed:', geoErr);
+                    setLocation({ city: 'Location detected', lat, lng });
+                }
 
                 // 2. Update CURRENT user's location in database so others see them
                 const { data: { user } } = await supabase.auth.getUser();
+                let currentUserProfile = null;
                 if (user) {
                     setCurrentUserId(user.id);
-                    await supabase
+                    const { error: updateErr } = await supabase
                         .from('users')
                         .update({ last_lat: lat, last_lng: lng })
                         .eq('id', user.id);
+                    if (updateErr) console.warn('Failed to update user location:', updateErr);
+
+                    // Fetch the current user's profile so we can guarantee they show on the map
+                    const { data: profile } = await supabase
+                        .from('users')
+                        .select('id, username, avatar_url, tech_stack')
+                        .eq('id', user.id)
+                        .single();
+                    currentUserProfile = profile;
                 }
 
-                // 3. Fetch all VISIBLE users from Supabase to plot on the map
+                // 3. Fetch all users from Supabase to plot on the map
                 const { data: realDevs, error } = await supabase
                     .from('users')
                     .select('id, username, avatar_url, last_lat, last_lng, tech_stack')
-                    .eq('is_visible_on_map', true)
                     .not('last_lat', 'is', null)
                     .not('last_lng', 'is', null);
 
@@ -69,7 +93,6 @@ const DevMap = () => {
 
                 // 4. Map DB Format to the Frontend Format
                 const formattedDevs = (realDevs || []).map(dev => {
-                    // Fallbacks in case columns aren't populated yet by real users
                     const stack = Array.isArray(dev.tech_stack) && dev.tech_stack.length > 0 ? dev.tech_stack : ['Frontend'];
                     const category = stack[0];
 
@@ -82,13 +105,32 @@ const DevMap = () => {
                         role: `${category} Engineer`,
                         category: category,
                         stack: stack,
-                        distance: `1.2 km`, // To fully calculate distance perfectly we need a haversine function or PostGIS
-                        avatar: dev.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${dev.id}`
+                        distance: `1.2 km`,
+                        avatar: dev.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${dev.id}`,
+                        user_obj: dev
                     };
                 });
 
-                // For testing purposes right now (since you are the only user in DB), 
-                // we'll append a few mock nearby devs so the map isn't totally empty!
+                // 5. Guarantee the current user is in the list (uses live GPS coords as fallback)
+                if (user && !formattedDevs.find(d => d.id === user.id)) {
+                    const profile = currentUserProfile;
+                    const stack = Array.isArray(profile?.tech_stack) && profile.tech_stack.length > 0 ? profile.tech_stack : ['Frontend'];
+                    formattedDevs.unshift({
+                        id: user.id,
+                        lat: lat,
+                        lng: lng,
+                        name: profile?.username || 'You',
+                        username: profile?.username || 'you',
+                        role: `${stack[0]} Engineer`,
+                        category: stack[0],
+                        stack: stack,
+                        distance: '0 km',
+                        avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
+                        user_obj: profile || {}
+                    });
+                }
+
+                // Mock nearby devs for testing
                 const mockDevs = Array.from({ length: 5 }).map((_, i) => ({
                     id: `mock-${i}`,
                     lat: lat + (Math.random() - 0.5) * 0.1,
@@ -159,7 +201,8 @@ const DevMap = () => {
                         <div>
                             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-1 drop-shadow-md">Developer Radar</h1>
                             <p className="text-gray-400 text-lg flex items-center gap-2">
-                                <Navigation size={16} className="text-primary animate-pulse" /> Scanning {location.city}...
+                                <Navigation size={16} className={`text-primary ${isLoading ? 'animate-pulse' : ''}`} />
+                                {isLoading ? `Scanning ${location.city}...` : `Tracking near ${location.city}`}
                             </p>
                         </div>
                     </div>

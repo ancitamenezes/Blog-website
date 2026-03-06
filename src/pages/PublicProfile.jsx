@@ -8,6 +8,10 @@ import PostCard from '../components/feed/PostCard';
 import FollowsModal from '../components/profile/FollowsModal';
 import GitHubStatsCard from '../components/profile/GitHubStatsCard';
 import { MapPin, Link as LinkIcon, Calendar, Loader2, ArrowLeft, Github } from 'lucide-react';
+import { formatSmartDate } from '../utils/dateUtils';
+import { playSound } from '../utils/soundUtils';
+import { getActivityStatus, getAvatarGlowClass } from '../utils/activityUtils';
+import ActivityBadge from '../components/profile/ActivityBadge';
 
 const PublicProfile = () => {
     const { username } = useParams();
@@ -79,7 +83,7 @@ const PublicProfile = () => {
                             snippet: plainTextSnippet.substring(0, 150) + (plainTextSnippet.length > 150 ? '...' : ''),
                             fullContent: post.content,
                             coverImage: post.cover_image,
-                            createdAt: new Date(post.created_at).toLocaleDateString(),
+                            createdAt: formatSmartDate(post.created_at),
                             author: {
                                 id: post.author.id,
                                 name: post.author.name,
@@ -188,6 +192,7 @@ const PublicProfile = () => {
                 setFollowersCount(prev => prev - 1);
             } else {
                 // Follow
+                playSound('follow');
                 await supabase
                     .from('follows')
                     .insert({ follower_id: currentUser.id, following_id: profileUser.id });
@@ -249,19 +254,23 @@ const PublicProfile = () => {
             <div className="max-w-4xl mx-auto px-6 relative z-20 -mt-24 md:-mt-32">
                 {/* Profile Header */}
                 <div className="profile-info flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-end mb-8 border-b border-white/5 pb-10">
-                    <div className="relative shrink-0">
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 blur-md opacity-50" />
-                        <img
-                            src={profileUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'}
-                            alt={profileUser.name}
-                            className="relative size-32 md:size-48 rounded-full border-4 border-[#0f0f11] object-cover"
-                        />
+                    <div className="relative shrink-0 -mt-16 md:-mt-20">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 blur-md opacity-20" />
+                        <div className="p-1.5 bg-[#0a0a0c] rounded-full inline-block relative z-10">
+                            <img
+                                src={profileUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'}
+                                alt="Profile"
+                                className={`w-32 h-32 md:w-40 md:h-40 rounded-full object-cover ${getAvatarGlowClass(getActivityStatus(profileUser.id))}`}
+                            />
+                        </div>
                     </div>
-
                     <div className="flex-1 w-full relative">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                             <div>
-                                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">{profileUser.name}</h1>
+                                <div className="flex items-center gap-3">
+                                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">{profileUser.name}</h1>
+                                    <ActivityBadge user={profileUser} className="scale-110 origin-left mt-2" />
+                                </div>
                                 <p className="text-xl text-gray-500">@{profileUser.username}</p>
                             </div>
 

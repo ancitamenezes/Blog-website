@@ -87,6 +87,23 @@ body::-webkit-scrollbar {
   .animate-shake {
     animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
   }
+
+  /* Late Night Mode overrides */
+  .late-night-mode {
+    --color-dark: #000000;
+    --color-darker: #000000;
+    --color-card: #09090b;
+    --color-card-hover: #18181b;
+
+    --color-primary: #9333ea;
+    /* Brighter Purple 600 */
+    --color-primary-hover: #a855f7;
+    /* Brighter Purple 500 */
+    --color-primary-glow: rgba(147, 51, 234, 0.6);
+    /* Stronger glow */
+
+    --color-text-muted: #71717a;
+  }
 }
 
 /* Glassmorphism utilities */

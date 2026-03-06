@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAppContext } from '../../context/AppContext';
 import { X, Send, Loader2 } from 'lucide-react';
+import { formatSmartDate } from '../../utils/dateUtils';
+import ActivityBadge from '../profile/ActivityBadge';
 
 const CommentsModal = ({ post, onClose, onCommentAdded }) => {
     const { user } = useAppContext();
@@ -112,8 +114,9 @@ const CommentsModal = ({ post, onClose, onCommentAdded }) => {
                                     <div className="flex-1">
                                         <div className="flex items-baseline gap-2 mb-1">
                                             <span className="font-bold text-white text-sm">{comment.users?.name || 'Anonymous'}</span>
+                                            <ActivityBadge user={comment.users} className="scale-[0.80] origin-left" />
                                             <span className="text-xs text-gray-500">@{comment.users?.username || 'user'}</span>
-                                            <span className="text-xs text-gray-600">• {new Date(comment.created_at).toLocaleDateString()}</span>
+                                            <span className="text-xs text-gray-600">• {formatSmartDate(comment.created_at)}</span>
                                         </div>
                                         <p className="text-sm text-gray-300 font-paragraph break-words whitespace-pre-wrap">
                                             {comment.content}

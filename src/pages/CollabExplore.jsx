@@ -10,6 +10,7 @@ const CollabExplore = () => {
     const navigate = useNavigate();
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingRoles, setLoadingRoles] = useState({});
 
     useEffect(() => {
         const fetchRooms = async () => {
@@ -54,6 +55,8 @@ const CollabExplore = () => {
             return;
         }
 
+        setLoadingRoles(prev => ({ ...prev, [roleId]: true }));
+
         try {
             const { error } = await supabase
                 .from('collab_requests')
@@ -76,6 +79,8 @@ const CollabExplore = () => {
         } catch (error) {
             console.error("Error requesting to join:", error);
             alert("Failed to send request.");
+        } finally {
+            setLoadingRoles(prev => ({ ...prev, [roleId]: false }));
         }
     };
 
@@ -157,9 +162,10 @@ const CollabExplore = () => {
                                             ) : (
                                                 <button
                                                     onClick={() => handleRequestJoin(room.id, role.id)}
-                                                    className="bg-white/10 hover:bg-primary text-white text-xs px-4 py-1.5 rounded-full font-bold transition-all"
+                                                    disabled={loadingRoles[role.id]}
+                                                    className="bg-white/10 hover:bg-primary text-white text-xs px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                                                 >
-                                                    Request to Join
+                                                    {loadingRoles[role.id] ? <Loader2 size={12} className="animate-spin" /> : 'Request to Join'}
                                                 </button>
                                             )}
                                         </div>

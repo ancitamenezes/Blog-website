@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { User, Code2, MapPin, ExternalLink, MessageSquare, UserPlus, Check } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { supabase } from '../../lib/supabase';
+import { playSound } from '../../utils/soundUtils';
+import { getActivityStatus, getAvatarGlowClass } from '../../utils/activityUtils';
+import ActivityBadge from '../profile/ActivityBadge';
 
 // Required for leaflet markers to work in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -14,15 +18,15 @@ const createCustomIcon = (colorClass, pulseColor) => {
     return L.divIcon({
         className: 'custom-leaflet-icon',
         html: `
-            <div class="relative flex items-center justify-center w-6 h-6">
-                <!-- Outer Pulse -->
+    <div class="relative flex items-center justify-center w-6 h-6">
+                <!--Outer Pulse-->
                 <div class="absolute inset-0 rounded-full animate-ping opacity-20 bg-${pulseColor}-500"></div>
-                <!-- Inner Glow -->
+                <!--Inner Glow-->
                 <div class="absolute inset-0 rounded-full blur-[4px] bg-${pulseColor}-500/50"></div>
-                <!-- Solid Core -->
-                <div class="relative w-3 h-3 rounded-full border border-[rgba(255,255,255,0.8)] shadow-[0_0_10px_currentColor] text-${pulseColor}-400 bg-current"></div>
+                <!--Solid Core-->
+    <div class="relative w-3 h-3 rounded-full border border-[rgba(255,255,255,0.8)] shadow-[0_0_10px_currentColor] text-${pulseColor}-400 bg-current"></div>
             </div>
-        `,
+    `,
         iconSize: [24, 24],
         iconAnchor: [12, 12],
         popupAnchor: [0, -12],
@@ -68,6 +72,7 @@ const ProfilePopup = ({ dev, currentUserId }) => {
             if (isFollowing) {
                 await supabase.from('follows').delete().match({ follower_id: currentUserId, following_id: dev.id });
             } else {
+                playSound('follow');
                 await supabase.from('follows').insert({ follower_id: currentUserId, following_id: dev.id });
             }
             await fetchFollowing(currentUserId);
@@ -79,43 +84,47 @@ const ProfilePopup = ({ dev, currentUserId }) => {
     };
 
     return (
-        <div className="p-3 min-w-[200px] text-white">
-            <div className="flex items-center gap-3 mb-3 border-b border-white/10 pb-3">
-                <img src={dev.avatar} alt={dev.name} className="w-10 h-10 rounded-full border border-white/20" />
-                <div>
-                    <h3 className="font-bold text-sm m-0 leading-tight">
-                        {dev.name} {isCurrentUser && <span className="text-[10px] text-primary ml-1">(You)</span>}
-                    </h3>
-                    <p className="text-xs text-gray-400 m-0">{dev.role}</p>
+        <div className="p-3 min-w-[200px] max-w-[240px] text-white">
+            {/* Avatar + Info row */}
+            <div className="flex items-center gap-2.5 mb-2">
+                <img
+                    src={dev.avatar}
+                    alt={dev.name}
+                    className={`w-9 h-9 rounded-full border border-[#27272a] shrink-0 ${getAvatarGlowClass(getActivityStatus(dev.id))}`}
+                />
+                <div className="min-w-0">
+                    <div className="flex items-center gap-1 mb-0.5">
+                        <h3 className="font-bold text-xs m-0 leading-tight truncate">{dev.name}</h3>
+                        {isCurrentUser && <span className="text-[8px] text-primary font-bold bg-primary/15 px-1 py-0.5 rounded-full shrink-0">You</span>}
+                    </div>
+                    <p className="text-[10px] text-gray-500 m-0">{dev.role}</p>
                 </div>
             </div>
 
-            <div className="flex flex-wrap gap-1 mb-3">
-                {dev.stack.map(tech => (
-                    <span key={tech} className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 border border-white/5 font-mono">
+            {/* Tech Stack */}
+            <div className="flex flex-wrap gap-1 mb-2">
+                {dev.stack.slice(0, 3).map(tech => (
+                    <span key={tech} className="text-[9px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 font-mono text-gray-400">
                         {tech}
                     </span>
                 ))}
             </div>
 
-            {!isCurrentUser && (
-                <div className="flex items-center gap-1 text-[11px] text-gray-400 mb-4">
-                    <MapPin size={12} /> {dev.distance} away
-                </div>
-            )}
-
-            <div className="flex gap-2 w-full mt-3">
-                <Link to={`/u/${dev.username}`} className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs py-1.5 rounded transition-colors flex items-center justify-center gap-1 no-underline">
-                    <User size={12} /> Profile
+            {/* Action Buttons */}
+            <div className="flex gap-1.5 w-full">
+                <Link
+                    to={`/u/${dev.username}`}
+                    className="flex-1 bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 no-underline"
+                >
+                    <User size={11} /> Profile
                 </Link>
-
                 {!isCurrentUser && (
                     <button
                         onClick={handleFollowToggle}
                         disabled={isFollowLoading}
-                        className={`flex-1 text-xs py-1.5 rounded transition-colors flex items-center justify-center gap-1 ${isFollowing ? 'bg-white/10 hover:bg-white/20 text-gray-300' : 'bg-primary hover:bg-primary/80 text-white'}`}
+                        className={`flex-1 text-[11px] font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 ${isFollowing ? 'bg-white/10 hover:bg-white/20 text-gray-300' : 'bg-primary hover:bg-primary-hover text-white'}`}
                     >
-                        {isFollowLoading ? '...' : isFollowing ? <><Check size={12} /> Following</> : <><UserPlus size={12} /> Follow</>}
+                        {isFollowLoading ? '...' : isFollowing ? <><Check size={11} /> Following</> : <><UserPlus size={11} /> Follow</>}
                     </button>
                 )}
             </div>
@@ -144,18 +153,45 @@ const InteractiveMap = ({ center, developers, currentUserId }) => {
                     url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                 />
 
-                {developers.map((dev) => (
-                    <Marker
-                        key={dev.id}
-                        position={[dev.lat, dev.lng]}
-                        icon={ICONS[dev.category] || ICONS.Default}
-                    >
-                        {/* Leaflet Popups are injected into DOM, we must style them via global CSS or inline carefully */}
-                        <Popup className="custom-dark-popup">
-                            <ProfilePopup dev={dev} currentUserId={currentUserId} />
-                        </Popup>
-                    </Marker>
-                ))}
+                <MarkerClusterGroup
+                    chunkedLoading
+                    maxClusterRadius={40}
+                    spiderfyOnMaxZoom={true}
+                    showCoverageOnHover={false}
+                    iconCreateFunction={(cluster) => {
+                        const count = cluster.getChildCount();
+                        return L.divIcon({
+                            html: `<div style="
+                                background: rgba(139,92,246,0.85);
+                                border: 2px solid rgba(139,92,246,0.4);
+                                border-radius: 50%;
+                                width: 36px;
+                                height: 36px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-weight: 700;
+                                font-size: 12px;
+                                color: white;
+                                box-shadow: 0 0 15px rgba(139,92,246,0.5);
+                            ">${count}</div>`,
+                            className: 'custom-leaflet-icon',
+                            iconSize: L.point(36, 36, true),
+                        });
+                    }}
+                >
+                    {developers.map((dev) => (
+                        <Marker
+                            key={dev.id}
+                            position={[dev.lat, dev.lng]}
+                            icon={ICONS[dev.category] || ICONS.Default}
+                        >
+                            <Popup className="custom-dark-popup">
+                                <ProfilePopup dev={dev} currentUserId={currentUserId} />
+                            </Popup>
+                        </Marker>
+                    ))}
+                </MarkerClusterGroup>
 
             </MapContainer>
         </div>
